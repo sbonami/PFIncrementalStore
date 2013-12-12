@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/sbonami/PFIncrementalStore.png?label=ready)](https://waffle.io/sbonami/PFIncrementalStore)  
 PFIncrementalStore
 ==================
 
