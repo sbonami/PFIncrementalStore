@@ -1,9 +1,8 @@
-[![Stories in Ready](https://badge.waffle.io/sbonami/PFIncrementalStore.png?label=ready)](https://waffle.io/sbonami/PFIncrementalStore)  
 PFIncrementalStore
 ==================
 
-[![Build
-Status](https://travis-ci.org/sbonami/PFIncrementalStore.png?branch=master)](https://travis-ci.org/sbonami/PFIncrementalStore)
+[![Build Status](https://travis-ci.org/sbonami/PFIncrementalStore.png?branch=master)](https://travis-ci.org/sbonami/PFIncrementalStore)
+[![Stories in Ready](https://badge.waffle.io/sbonami/PFIncrementalStore.png?label=ready)](https://waffle.io/sbonami/PFIncrementalStore)  
 
 An NSIncrementalStore subclass for Parse
 
