@@ -1,3 +1,4 @@
+
 // PFIncrementalStore.m
 //
 // Copyright (c) 2013 Scott BonAmi
@@ -108,6 +109,7 @@ inline NSString * PFResourceIdentifierFromReferenceObject(id referenceObject) {
 - (id)executeFetchRequest:(NSFetchRequest *)fetchRequest
               withContext:(NSManagedObjectContext *)context
                     error:(NSError *__autoreleasing *)error {
+    
     switch (fetchRequest.resultType) {
             
         case NSManagedObjectResultType: {
@@ -134,10 +136,10 @@ inline NSString * PFResourceIdentifierFromReferenceObject(id referenceObject) {
 }
 
 -(NSArray *)objectResultOfFetchRequest:(NSFetchRequest *)fetchRequest
-                         withContext:(NSManagedObjectContext *)context
-                               error:(NSError *__autoreleasing *)error {
     PFQuery *query = [PFQuery queryWithClassName:fetchRequest.entityName predicate:fetchRequest.predicate];
     NSMutableSet *fetchedObjects = [NSMutableSet set];
+                           withContext:(NSManagedObjectContext *)context
+                                 error:(NSError *__autoreleasing *)error {
     
     for (PFObject *object in [query findObjects]) {
         NSManagedObjectID *objectID = [self managedObjectIDForEntity:fetchRequest.entity withParseObjectId:object.objectId];
@@ -162,6 +164,7 @@ inline NSString * PFResourceIdentifierFromReferenceObject(id referenceObject) {
 -(NSUInteger)countResultOfFetchRequest:(NSFetchRequest *)fetchRequest
                            withContext:(NSManagedObjectContext *)context
                                  error:(NSError *__autoreleasing *)error {
+    
     return [[self objectResultOfFetchRequest:fetchRequest withContext:context error:error] count];
 }
 
@@ -344,7 +347,7 @@ inline NSString * PFResourceIdentifierFromReferenceObject(id referenceObject) {
 }
 
 - (NSManagedObjectID *)managedObjectIDForEntity:(NSEntityDescription *)entity
-                  withParseObjectId:(NSString *)resourceIdentifier {
+                              withParseObjectId:(NSString *)resourceIdentifier {
     if (!resourceIdentifier) {
         return nil;
     }
