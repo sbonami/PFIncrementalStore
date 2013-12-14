@@ -29,6 +29,20 @@
 
 static NSString * const kPFIncrementalStoreErrorDomain = @"PFIncrementalStoreErrorDomain";
 static NSString * const kPFIncrementalStoreUnimplementedMethodException = @"PFIncrementalStoreUnimplementedMethodException";
+NSString * const PFIncrementalStoreContextWillFetchRemoteValues = @"PFIncrementalStoreContextWillFetchRemoteValues";
+NSString * const PFIncrementalStoreContextWillSaveRemoteValues = @"PFIncrementalStoreContextWillSaveRemoteValues";
+NSString * const PFIncrementalStoreContextDidFetchRemoteValues = @"PFIncrementalStoreContextDidFetchRemoteValues";
+NSString * const PFIncrementalStoreContextDidSaveRemoteValues = @"PFIncrementalStoreContextDidSaveRemoteValues";
+NSString * const PFIncrementalStoreContextWillFetchNewValuesForObject = @"PFIncrementalStoreContextWillFetchNewValuesForObject";
+NSString * const PFIncrementalStoreContextDidFetchNewValuesForObject = @"PFIncrementalStoreContextDidFetchNewValuesForObject";
+NSString * const PFIncrementalStoreContextWillFetchNewValuesForRelationship = @"PFIncrementalStoreContextWillFetchNewValuesForRelationship";
+NSString * const PFIncrementalStoreContextDidFetchNewValuesForRelationship = @"PFIncrementalStoreContextDidFetchNewValuesForRelationship";
+NSString * const PFIncrementalStoreRequestOperationsKey = @"PFIncrementalStoreRequestOperations";
+NSString * const PFIncrementalStoreFetchedObjectIDsKey = @"PFIncrementalStoreFetchedObjectIDs";
+NSString * const PFIncrementalStoreFaultingObjectIDKey = @"PFIncrementalStoreFaultingObjectID";
+NSString * const PFIncrementalStoreFaultingRelationshipKey = @"PFIncrementalStoreFaultingRelationship";
+NSString * const PFIncrementalStorePersistentStoreRequestKey = @"PFIncrementalStorePersistentStoreRequest";
+
 
 #pragma mark - Resource Identifier Methods
 
@@ -55,6 +69,13 @@ inline NSString * PFResourceIdentifierFromReferenceObject(id referenceObject) {
     return [string hasPrefix:kPFReferenceObjectPrefix] ? [string substringFromIndex:[kPFReferenceObjectPrefix length]] : string;
 }
 
+static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException(NSManagedObjectContext *managedObjectContext) {
+    NSError *error = nil;
+    if (![managedObjectContext save:&error]) {
+        @throw [NSException exceptionWithName:NSInternalInconsistencyException reason:[error localizedFailureReason] userInfo:[NSDictionary dictionaryWithObject:error forKey:NSUnderlyingErrorKey]];
+    }
+}
+
 @interface NSManagedObject (_PFIncrementalStore)
 @property (readwrite, nonatomic, copy, setter = pf_setResourceIdentifier:) NSString *pf_resourceIdentifier;
 @end
@@ -79,6 +100,15 @@ inline NSString * PFResourceIdentifierFromReferenceObject(id referenceObject) {
 
 - (void)pf_setResourceIdentifier:(NSString *)resourceIdentifier {
     objc_setAssociatedObject(self, &kPFResourceIdentifierObjectKey, resourceIdentifier, OBJC_ASSOCIATION_COPY_NONATOMIC);
+}
+
+- (void)setValuesFromParseObject:(PFObject *)parseObject {
+    NSMutableDictionary *mutableAttributeValues = [self.entity.attributesByName mutableCopy];
+    [mutableAttributeValues removeObjectForKey:kPFIncrementalStoreResourceIdentifierAttributeName];
+    [mutableAttributeValues removeObjectForKey:kPFIncrementalStoreLastModifiedAttributeName];
+    for (NSString *attributeName in mutableAttributeValues) {
+        [self setValue:[parseObject objectForKey:attributeName] forKey:attributeName];
+    }
 }
 
 @end
@@ -110,6 +140,43 @@ inline NSString * PFResourceIdentifierFromReferenceObject(id referenceObject) {
               withContext:(NSManagedObjectContext *)context
                     error:(NSError *__autoreleasing *)error {
     
+    PFQuery *query = [PFQuery queryWithClassName:fetchRequest.entityName predicate:fetchRequest.predicate];
+    [query findObjectsInBackgroundWithBlock:^(NSArray *objects, NSError *error) {
+        if (error) {
+            NSLog(@"Error: %@, %@", query, error);
+            [self notifyManagedObjectContext:context requestIsCompleted:YES forFetchRequest:fetchRequest fetchedObjectIDs:nil];
+        } else {
+            [context performBlockAndWait:^{
+                NSManagedObjectContext *childContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
+                childContext.parentContext = context;
+                childContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy;
+                
+                [childContext performBlockAndWait:^{
+                    [self insertOrUpdateObjects:objects ofEntity:fetchRequest.entity withContext:childContext error:nil completionBlock:^(NSArray *managedObjects, NSArray *backingObjects) {
+                        NSSet *childObjects = [childContext registeredObjects];
+                        PFSaveManagedObjectContextOrThrowInternalConsistencyException(childContext);
+                        
+                        NSManagedObjectContext *backingContext = [self backingManagedObjectContext];
+                        [backingContext performBlockAndWait:^{
+                            PFSaveManagedObjectContextOrThrowInternalConsistencyException(backingContext);
+                        }];
+                        
+                        [context performBlockAndWait:^{
+                            for (NSManagedObject *childObject in childObjects) {
+                                NSManagedObject *parentObject = [context objectWithID:childObject.objectID];
+                                [context refreshObject:parentObject mergeChanges:YES];
+                            }
+                        }];
+                        
+                        [self notifyManagedObjectContext:context requestIsCompleted:YES forFetchRequest:fetchRequest fetchedObjectIDs:[managedObjects valueForKeyPath:@"objectID"]];
+                    }];
+                }];
+            }];
+        }
+    }];
+    
+    [self notifyManagedObjectContext:context requestIsCompleted:NO forFetchRequest:fetchRequest fetchedObjectIDs:nil];
+    
     switch (fetchRequest.resultType) {
             
         case NSManagedObjectResultType: {
@@ -136,29 +203,48 @@ inline NSString * PFResourceIdentifierFromReferenceObject(id referenceObject) {
 }
 
 -(NSArray *)objectResultOfFetchRequest:(NSFetchRequest *)fetchRequest
-    PFQuery *query = [PFQuery queryWithClassName:fetchRequest.entityName predicate:fetchRequest.predicate];
-    NSMutableSet *fetchedObjects = [NSMutableSet set];
                            withContext:(NSManagedObjectContext *)context
                                  error:(NSError *__autoreleasing *)error {
     
-    for (PFObject *object in [query findObjects]) {
-        NSManagedObjectID *objectID = [self managedObjectIDForEntity:fetchRequest.entity withParseObjectId:object.objectId];
-        [fetchedObjects addObject:[context objectWithID:objectID]];
+    NSManagedObjectContext *backingContext = [self backingManagedObjectContext];
+    NSFetchRequest *backingFetchRequest = [fetchRequest copy];
+    backingFetchRequest.entity = [NSEntityDescription entityForName:fetchRequest.entityName inManagedObjectContext:backingContext];
+    backingFetchRequest.resultType = NSDictionaryResultType;
+    backingFetchRequest.propertiesToFetch = [NSArray arrayWithObject:kPFIncrementalStoreResourceIdentifierAttributeName];
+    NSArray *results = [backingContext executeFetchRequest:backingFetchRequest error:error];
+    
+    NSMutableArray *mutableObjects = [NSMutableArray arrayWithCapacity:[results count]];
+    for (NSString *resourceIdentifier in [results valueForKeyPath:kPFIncrementalStoreResourceIdentifierAttributeName]) {
+        NSManagedObjectID *objectID = [self managedObjectIDForEntity:fetchRequest.entity withParseObjectId:resourceIdentifier];
+        NSManagedObject *object = [context objectWithID:objectID];
+        object.pf_resourceIdentifier = resourceIdentifier;
+        [mutableObjects addObject:object];
     }
     
-    return [fetchedObjects allObjects];
+    return mutableObjects;
 }
 
 -(NSArray *)objectIDResultOfFetchRequest:(NSFetchRequest *)fetchRequest
                              withContext:(NSManagedObjectContext *)context
                                    error:(NSError *__autoreleasing *)error {
-    return [[self objectResultOfFetchRequest:fetchRequest withContext:context error:error] valueForKeyPath:@"objectID"];
+    
+    NSMutableArray *managedObjectIDs = [NSMutableArray array];
+    
+    for (NSManagedObject *object in [self objectResultOfFetchRequest:fetchRequest withContext:context error:error]) {
+        [managedObjectIDs addObject:object.objectID];
+    }
+    
+    return managedObjectIDs;
 }
 
--(NSDictionary *)dictionaryResultOfFetchRequest:(NSFetchRequest *)fetchRequest
-                                    withContext:(NSManagedObjectContext *)context
-                                          error:(NSError *__autoreleasing *)error {
-    return NSDictionaryOfVariableBindings([self objectResultOfFetchRequest:fetchRequest withContext:context error:error]);
+-(NSArray *)dictionaryResultOfFetchRequest:(NSFetchRequest *)fetchRequest
+                               withContext:(NSManagedObjectContext *)context
+                                     error:(NSError *__autoreleasing *)error {
+    
+    NSManagedObjectContext *backingContext = [self backingManagedObjectContext];
+    NSFetchRequest *backingFetchRequest = [fetchRequest copy];
+    backingFetchRequest.entity = [NSEntityDescription entityForName:fetchRequest.entityName inManagedObjectContext:backingContext];
+    return [backingContext executeFetchRequest:backingFetchRequest error:error];
 }
 
 -(NSUInteger)countResultOfFetchRequest:(NSFetchRequest *)fetchRequest
@@ -195,16 +281,16 @@ inline NSString * PFResourceIdentifierFromReferenceObject(id referenceObject) {
             [object setObject:value forKey:attributeName];
         }
         /*
-        for (NSString *relationshipName in changedObject.entity.relationshipsByName) {
-            NSRelationshipDescription *relationship = [changedObject.entity.relationshipsByName objectForKey:relationshipName];
-            if (![relationship isToMany]) {
-                id value = [changedObject valueForKey:relationshipName];
-                if (value) {
-                    [object setObject:value forKey:relationshipName];
-                }
-            }
-        }
-        */
+         for (NSString *relationshipName in changedObject.entity.relationshipsByName) {
+         NSRelationshipDescription *relationship = [changedObject.entity.relationshipsByName objectForKey:relationshipName];
+         if (![relationship isToMany]) {
+         id value = [changedObject valueForKey:relationshipName];
+         if (value) {
+         [object setObject:value forKey:relationshipName];
+         }
+         }
+         }
+         */
         [object save];
     }
     
@@ -244,7 +330,7 @@ inline NSString * PFResourceIdentifierFromReferenceObject(id referenceObject) {
             
             NSAttributeDescription *lastModifiedProperty = [[NSAttributeDescription alloc] init];
             [lastModifiedProperty setName:kPFIncrementalStoreLastModifiedAttributeName];
-            [lastModifiedProperty setAttributeType:NSStringAttributeType];
+            [lastModifiedProperty setAttributeType:NSDateAttributeType];
             [lastModifiedProperty setIndexed:NO];
             
             [entity setProperties:[entity.properties arrayByAddingObjectsFromArray:[NSArray arrayWithObjects:resourceIdentifierProperty, lastModifiedProperty, nil]]];
@@ -277,37 +363,173 @@ inline NSString * PFResourceIdentifierFromReferenceObject(id referenceObject) {
 }
 
 -(NSIncrementalStoreNode *)newValuesForObjectWithID:(NSManagedObjectID *)objectID withContext:(NSManagedObjectContext *)context error:(NSError *__autoreleasing *)error {
-    NSDictionary *values = [self valuesForEntity:objectID.entity withParseObjectId:[self referenceObjectForObjectID:objectID]];
-    return [[NSIncrementalStoreNode alloc] initWithObjectID:objectID withValues:values version:1];
+    NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] initWithEntityName:[[objectID entity] name]];
+    fetchRequest.resultType = NSDictionaryResultType;
+    fetchRequest.fetchLimit = 1;
+    fetchRequest.includesSubentities = NO;
+    
+    NSArray *attributes = [[[NSEntityDescription entityForName:fetchRequest.entityName inManagedObjectContext:context] attributesByName] allValues];
+    NSArray *intransientAttributes = [attributes filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"isTransient == NO"]];
+    fetchRequest.propertiesToFetch = [[intransientAttributes valueForKeyPath:@"name"] arrayByAddingObject:kPFIncrementalStoreLastModifiedAttributeName];
+    
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"%K = %@", kPFIncrementalStoreResourceIdentifierAttributeName, PFResourceIdentifierFromReferenceObject([self referenceObjectForObjectID:objectID])];
+    
+    __block NSArray *results;
+    NSManagedObjectContext *backingContext = [self backingManagedObjectContext];
+    [backingContext performBlockAndWait:^{
+        results = [backingContext executeFetchRequest:fetchRequest error:error];
+    }];
+    
+    NSDictionary *attributeValues = [results lastObject] ?: [NSDictionary dictionary];
+    NSIncrementalStoreNode *node = [[NSIncrementalStoreNode alloc] initWithObjectID:objectID withValues:attributeValues version:1];
+    
+    if (attributeValues) {
+        NSManagedObjectContext *childContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
+        childContext.parentContext = context;
+        childContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy;
+        
+        PFQuery *query = [[PFQuery alloc] initWithClassName:fetchRequest.entityName];
+        [query getObjectInBackgroundWithId:PFResourceIdentifierFromReferenceObject([self referenceObjectForObjectID:objectID]) block:^(PFObject *object, NSError *error) {
+            if (error) {
+                NSLog(@"Error: %@, %@", query, error);
+                [self notifyManagedObjectContext:context requestIsCompleted:YES forNewValuesForObjectWithID:objectID];
+            } else {
+                [childContext performBlock:^{
+                    NSManagedObject *managedObject = [childContext existingObjectWithID:objectID error:nil];
+                    NSManagedObjectID *backingObjectID = [self managedObjectIDForBackingObjectForEntity:[objectID entity] withParseObjectId:object.objectId];
+                    NSManagedObject *backingObject = [[self backingManagedObjectContext] existingObjectWithID:backingObjectID error:nil];
+                    
+                    NSMutableDictionary *mutableAttributeValues = [fetchRequest.entity.attributesByName mutableCopy];
+                    [mutableAttributeValues removeObjectForKey:kPFIncrementalStoreResourceIdentifierAttributeName];
+                    [mutableAttributeValues removeObjectForKey:kPFIncrementalStoreLastModifiedAttributeName];
+                    for (NSString *attributeName in fetchRequest.entity.attributesByName) {
+                        [mutableAttributeValues setObject:[object objectForKey:attributeName] forKey:attributeName];
+                    }
+                    
+                    [managedObject setValuesForKeysWithDictionary:mutableAttributeValues];
+                    [backingObject setValuesForKeysWithDictionary:mutableAttributeValues];
+                    
+                    [childContext performBlockAndWait:^{
+                        PFSaveManagedObjectContextOrThrowInternalConsistencyException(childContext);
+                        
+                        NSManagedObjectContext *backingContext = [self backingManagedObjectContext];
+                        [backingContext performBlockAndWait:^{
+                            PFSaveManagedObjectContextOrThrowInternalConsistencyException(backingContext);
+                        }];
+                    }];
+                    
+                    [self notifyManagedObjectContext:context requestIsCompleted:YES forNewValuesForObjectWithID:objectID];
+                }];
+            }
+        }];
+        
+        [self notifyManagedObjectContext:context requestIsCompleted:NO forNewValuesForObjectWithID:objectID];
+    }
+    
+    return node;
 }
 
 -(id)newValueForRelationship:(NSRelationshipDescription *)relationship forObjectWithID:(NSManagedObjectID *)objectID withContext:(NSManagedObjectContext *)context error:(NSError *__autoreleasing *)error {
-    id parseID = PFResourceIdentifierFromReferenceObject([self referenceObjectForObjectID:objectID]);
     
-    PFQuery *query = [[PFQuery alloc] initWithClassName:objectID.entity.name];
-    PFObject *object = [query getObjectWithId:parseID];
-    
-    NSMutableArray *relatedObjects = [NSMutableArray array];
-    for (PFObject *relatedObject in [object objectForKey:relationship.name]) {
-        [relatedObjects addObject:[self managedObjectIDForEntity:relationship.destinationEntity
-                                               withParseObjectId:relatedObject.objectId]];
+    if (![[context existingObjectWithID:objectID error:nil] hasChanges]) {
+        NSManagedObjectContext *childContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
+        childContext.parentContext = context;
+        childContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy;
+        
+        PFQuery *query = [[PFQuery alloc] initWithClassName:objectID.entity.name];
+        [query getObjectInBackgroundWithId:PFResourceIdentifierFromReferenceObject([self referenceObjectForObjectID:objectID]) block:^(PFObject *object, NSError *error) {
+            if (error) {
+                NSLog(@"Error: %@, %@", query, error);
+                [self notifyManagedObjectContext:context requestIsCompleted:YES forNewValuesForRelationship:relationship forObjectWithID:objectID];
+            } else {
+                [childContext performBlock:^{
+                    id relatedObjects = [object objectForKey:relationship.name];
+                    if (relatedObjects && ![relatedObjects conformsToProtocol:@protocol(NSFastEnumeration)]) {
+                        relatedObjects = @[relatedObjects];
+                    }
+                    
+                    for (PFObject *relatedObject in relatedObjects) {
+                        [relatedObject fetchIfNeeded];
+                    }
+                    
+                    [self insertOrUpdateObjects:relatedObjects ofEntity:relationship.destinationEntity withContext:childContext error:nil completionBlock:^(NSArray *managedObjects, NSArray *backingObjects) {
+                        NSManagedObject *managedObject = [childContext objectWithID:objectID];
+                        
+						NSManagedObjectID *backingObjectID = [self managedObjectIDForBackingObjectForEntity:[objectID entity] withParseObjectId:object.objectId];
+                        NSManagedObject *backingObject = (backingObjectID == nil) ? nil : [[self backingManagedObjectContext] existingObjectWithID:backingObjectID error:nil];
+                        
+                        if ([relationship isToMany]) {
+                            if ([relationship isOrdered]) {
+                                [managedObject setValue:[NSOrderedSet orderedSetWithArray:managedObjects] forKey:relationship.name];
+                                [backingObject setValue:[NSOrderedSet orderedSetWithArray:backingObjects] forKey:relationship.name];
+                            } else {
+                                [managedObject setValue:[NSSet setWithArray:managedObjects] forKey:relationship.name];
+                                [backingObject setValue:[NSSet setWithArray:backingObjects] forKey:relationship.name];
+                            }
+                        } else {
+                            [managedObject setValue:[managedObjects lastObject] forKey:relationship.name];
+                            [backingObject setValue:[backingObjects lastObject] forKey:relationship.name];
+                        }
+                        
+                        [childContext performBlockAndWait:^{
+                            PFSaveManagedObjectContextOrThrowInternalConsistencyException(childContext);
+                            
+                            NSManagedObjectContext *backingContext = [self backingManagedObjectContext];
+                            [backingContext performBlockAndWait:^{
+                                PFSaveManagedObjectContextOrThrowInternalConsistencyException(backingContext);
+                            }];
+                        }];
+                        
+                        [self notifyManagedObjectContext:context requestIsCompleted:YES forNewValuesForRelationship:relationship forObjectWithID:objectID];
+                    }];
+                }];
+            }
+        }];
+        
+        [self notifyManagedObjectContext:context requestIsCompleted:NO forNewValuesForRelationship:relationship forObjectWithID:objectID];
     }
-    return relatedObjects;
+    
+    NSManagedObjectID *backingObjectID = [self managedObjectIDForBackingObjectForEntity:[objectID entity] withParseObjectId:PFResourceIdentifierFromReferenceObject([self referenceObjectForObjectID:objectID])];
+    NSManagedObject *backingObject = (backingObjectID == nil) ? nil : [[self backingManagedObjectContext] existingObjectWithID:backingObjectID error:nil];
+    
+    if (backingObject) {
+        id backingRelationshipObject = [backingObject valueForKeyPath:relationship.name];
+        if ([relationship isToMany]) {
+            NSMutableArray *mutableObjects = [NSMutableArray arrayWithCapacity:[backingRelationshipObject count]];
+            for (NSString *resourceIdentifier in [backingRelationshipObject valueForKeyPath:kPFIncrementalStoreResourceIdentifierAttributeName]) {
+                NSManagedObjectID *objectID = [self managedObjectIDForEntity:relationship.destinationEntity withParseObjectId:resourceIdentifier];
+                [mutableObjects addObject:objectID];
+            }
+            
+            return mutableObjects;
+        } else {
+            NSString *resourceIdentifier = [backingRelationshipObject valueForKeyPath:kPFIncrementalStoreResourceIdentifierAttributeName];
+            NSManagedObjectID *objectID = [self managedObjectIDForEntity:relationship.destinationEntity withParseObjectId:resourceIdentifier];
+            
+            return objectID ?: [NSNull null];
+        }
+    } else {
+        if ([relationship isToMany]) {
+            return [NSArray array];
+        } else {
+            return [NSNull null];
+        }
+    }
 }
 
 -(NSArray *)obtainPermanentIDsForObjects:(NSArray *)array error:(NSError *__autoreleasing *)error {
-    NSMutableArray *objectIDs = [NSMutableArray arrayWithCapacity:[array count]];
+    NSMutableArray *mutablePermanentIDs = [NSMutableArray arrayWithCapacity:[array count]];
     for (NSManagedObject *managedObject in array) {
         NSManagedObjectID *managedObjectID = managedObject.objectID;
-#warning - NOT IMPLEMENTED
         if ([managedObjectID isTemporaryID] && managedObject.pf_resourceIdentifier) {
-            [objectIDs addObject:[self managedObjectIDForEntity:managedObject.entity withParseObjectId:managedObject.pf_resourceIdentifier]];
+            NSManagedObjectID *objectID = [self managedObjectIDForEntity:managedObject.entity withParseObjectId:managedObject.pf_resourceIdentifier];
+            [mutablePermanentIDs addObject:objectID];
         } else {
-            [objectIDs addObject:managedObjectID];
+            [mutablePermanentIDs addObject:managedObjectID];
         }
     }
     
-    return objectIDs;
+    return mutablePermanentIDs;
 }
 
 - (void)managedObjectContextDidRegisterObjectsWithIDs:(NSArray *)objectIDs {
@@ -315,7 +537,7 @@ inline NSString * PFResourceIdentifierFromReferenceObject(id referenceObject) {
     
     for (NSManagedObjectID *objectID in objectIDs) {
         id referenceObject = [self referenceObjectForObjectID:objectID];
-        if (!referenceObject) { 
+        if (!referenceObject) {
             continue;
         }
         
@@ -346,6 +568,72 @@ inline NSString * PFResourceIdentifierFromReferenceObject(id referenceObject) {
     return _backingManagedObjectContext;
 }
 
+-(BOOL)insertOrUpdateObjects:(NSArray *)parseObjects
+                    ofEntity:(NSEntityDescription *)entity
+                 withContext:(NSManagedObjectContext *)context
+                       error:(NSError *__autoreleasing *)error
+             completionBlock:(void (^)(NSArray *managedObjects, NSArray *backingObjects))completionBlock {
+    
+    if (!parseObjects) {
+        return NO;
+    }
+    
+    if ([parseObjects count] == 0) {
+        if (completionBlock) {
+            completionBlock([NSArray array], [NSArray array]);
+        }
+        
+        return NO;
+    }
+    
+    NSManagedObjectContext *backingContext = [self backingManagedObjectContext];
+    
+    NSUInteger numberOfRepresentations = [parseObjects count];
+    NSMutableArray *mutableManagedObjects = [NSMutableArray arrayWithCapacity:numberOfRepresentations];
+    NSMutableArray *mutableBackingObjects = [NSMutableArray arrayWithCapacity:numberOfRepresentations];
+    
+    for (PFObject *object in parseObjects) {
+        __block NSManagedObject *managedObject = nil;
+        [context performBlockAndWait:^{
+            managedObject = [context existingObjectWithID:[self managedObjectIDForEntity:entity withParseObjectId:object.objectId] error:nil];
+        }];
+        
+        [managedObject setValuesFromParseObject:object];
+        
+        NSManagedObjectID *backingObjectID = [self managedObjectIDForBackingObjectForEntity:entity withParseObjectId:object.objectId];
+        __block NSManagedObject *backingObject = nil;
+        [backingContext performBlockAndWait:^{
+            if (backingObjectID) {
+                backingObject = [backingContext existingObjectWithID:backingObjectID error:nil];
+            } else {
+                backingObject = [NSEntityDescription insertNewObjectForEntityForName:entity.name inManagedObjectContext:backingContext];
+                [backingObject.managedObjectContext obtainPermanentIDsForObjects:[NSArray arrayWithObject:backingObject] error:nil];
+            }
+        }];
+        [backingObject setValue:object.objectId forKey:kPFIncrementalStoreResourceIdentifierAttributeName];
+        [backingObject setValue:object.updatedAt forKey:kPFIncrementalStoreLastModifiedAttributeName];
+        [backingObject setValuesFromParseObject:object];
+        
+        NSLog(@"%@",backingObject);
+        if (!backingObjectID) {
+            [context insertObject:managedObject];
+        }
+        
+#warning RELATIONSHIP NOT IMPLEMENTED
+        
+        [mutableManagedObjects addObject:managedObject];
+        [mutableBackingObjects addObject:backingObject];
+    }
+    
+    if (completionBlock) {
+        completionBlock(mutableManagedObjects, mutableBackingObjects);
+    }
+    
+    return YES;
+}
+
+#pragma mark - Object ID Methods
+
 - (NSManagedObjectID *)managedObjectIDForEntity:(NSEntityDescription *)entity
                               withParseObjectId:(NSString *)resourceIdentifier {
     if (!resourceIdentifier) {
@@ -367,6 +655,41 @@ inline NSString * PFResourceIdentifierFromReferenceObject(id referenceObject) {
     return objectID;
 }
 
+- (NSManagedObjectID *)managedObjectIDForBackingObjectForEntity:(NSEntityDescription *)entity
+                                              withParseObjectId:(NSString *)resourceIdentifier {
+    if (!resourceIdentifier) {
+        return nil;
+    }
+    
+    NSManagedObjectID *objectID = [self managedObjectIDForEntity:entity withParseObjectId:resourceIdentifier];
+    __block NSManagedObjectID *backingObjectID = [_backingObjectIDByObjectID objectForKey:objectID];
+    if (backingObjectID) {
+        return backingObjectID;
+    }
+    
+    NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] initWithEntityName:[entity name]];
+    fetchRequest.resultType = NSManagedObjectIDResultType;
+    fetchRequest.fetchLimit = 1;
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"%K = %@", kPFIncrementalStoreResourceIdentifierAttributeName, resourceIdentifier];
+    
+    __block NSError *error = nil;
+    NSManagedObjectContext *backingContext = [self backingManagedObjectContext];
+    [backingContext performBlockAndWait:^{
+        backingObjectID = [[backingContext executeFetchRequest:fetchRequest error:&error] lastObject];
+    }];
+    
+    if (error) {
+        NSLog(@"Error: %@", error);
+        return nil;
+    }
+    
+    if (backingObjectID) {
+        [_backingObjectIDByObjectID setObject:backingObjectID forKey:objectID];
+    }
+    
+    return backingObjectID;
+}
+
 - (NSDictionary *)valuesForEntity:(NSEntityDescription *)entity
                 withParseObjectId:(NSString *)referenceObject {
     PFQuery *query = [[PFQuery alloc] initWithClassName:entity.name];
@@ -385,6 +708,64 @@ inline NSString * PFResourceIdentifierFromReferenceObject(id referenceObject) {
     }
     
     return values;
+}
+
+
+
+#pragma mark - Notification Methods
+
+- (void)notifyManagedObjectContext:(NSManagedObjectContext *)context
+                requestIsCompleted:(BOOL)isCompleted
+                   forFetchRequest:(NSFetchRequest *)fetchRequest
+                  fetchedObjectIDs:(NSArray *)fetchedObjectIDs
+{
+    NSString *notificationName = isCompleted ? PFIncrementalStoreContextDidFetchRemoteValues : PFIncrementalStoreContextWillFetchRemoteValues;
+    
+    NSMutableDictionary *userInfo = [NSMutableDictionary dictionary];
+    [userInfo setObject:fetchRequest forKey:PFIncrementalStorePersistentStoreRequestKey];
+    if (isCompleted && fetchedObjectIDs) {
+        [userInfo setObject:fetchedObjectIDs forKey:PFIncrementalStoreFetchedObjectIDsKey];
+    }
+    
+    [[NSNotificationCenter defaultCenter] postNotificationName:notificationName object:context userInfo:userInfo];
+}
+
+- (void)notifyManagedObjectContext:(NSManagedObjectContext *)context
+            lastRequestIsCompleted:(BOOL)isCompleted
+             forSaveChangesRequest:(NSSaveChangesRequest *)saveChangesRequest
+{
+    NSString *notificationName = isCompleted ? PFIncrementalStoreContextDidSaveRemoteValues : PFIncrementalStoreContextWillSaveRemoteValues;
+    
+    NSMutableDictionary *userInfo = [NSMutableDictionary dictionary];
+    [userInfo setObject:saveChangesRequest forKey:PFIncrementalStorePersistentStoreRequestKey];
+    
+    [[NSNotificationCenter defaultCenter] postNotificationName:notificationName object:context userInfo:userInfo];
+}
+
+- (void)notifyManagedObjectContext:(NSManagedObjectContext *)context
+                requestIsCompleted:(BOOL)isCompleted
+       forNewValuesForObjectWithID:(NSManagedObjectID *)objectID
+{
+    NSString *notificationName = isCompleted ? PFIncrementalStoreContextDidFetchNewValuesForObject : PFIncrementalStoreContextWillFetchNewValuesForObject;
+    
+    NSMutableDictionary *userInfo = [NSMutableDictionary dictionary];
+    [userInfo setObject:objectID forKey:PFIncrementalStoreFaultingObjectIDKey];
+    
+    [[NSNotificationCenter defaultCenter] postNotificationName:notificationName object:context userInfo:userInfo];
+}
+
+- (void)notifyManagedObjectContext:(NSManagedObjectContext *)context
+                requestIsCompleted:(BOOL)isCompleted
+       forNewValuesForRelationship:(NSRelationshipDescription *)relationship
+                   forObjectWithID:(NSManagedObjectID *)objectID
+{
+    NSString *notificationName = isCompleted ? PFIncrementalStoreContextDidFetchNewValuesForRelationship : PFIncrementalStoreContextWillFetchNewValuesForRelationship;
+    
+    NSMutableDictionary *userInfo = [NSMutableDictionary dictionary];
+    [userInfo setObject:objectID forKey:PFIncrementalStoreFaultingObjectIDKey];
+    [userInfo setObject:relationship forKey:PFIncrementalStoreFaultingRelationshipKey];
+    
+    [[NSNotificationCenter defaultCenter] postNotificationName:notificationName object:context userInfo:userInfo];
 }
 
 @end
