@@ -41,7 +41,7 @@ use `NSInMemoryStoreType`.
 
 PFIncrementalStore requires a subscription to Parse, a valid Parse App, API
 Key and Secret, and minor programming knowledge. Parse subscription and
-API informantion can be obtained at
+API information can be obtained at
 [https://www.parse.com/](https://www.parse.com/)
 
 PFIncrementalStore requires Xcode 4.4 with either the [iOS
