@@ -1,0 +1,23 @@
+PODS:
+  - Facebook-iOS-SDK (3.10.0)
+  - Parse-iOS-SDK (1.2.17):
+    - Facebook-iOS-SDK (~> 3.7)
+  - Parse-OSX-SDK (1.2.17)
+  - PFIncrementalStore (0.0.1):
+    - Parse-iOS-SDK
+    - Parse-OSX-SDK
+
+DEPENDENCIES:
+  - PFIncrementalStore (from `../`)
+
+EXTERNAL SOURCES:
+  PFIncrementalStore:
+    :path: ../
+
+SPEC CHECKSUMS:
+  Facebook-iOS-SDK: ef402579aeb30cf0c4a6370fb0a927e3dc3059e5
+  Parse-iOS-SDK: f57fc3a7b80c7135d5acdc55a0fbc3ab2d1d5027
+  Parse-OSX-SDK: 3640c1f1f60cc6a3ae0e01757bc809a3a4468827
+  PFIncrementalStore: 943720374826cb62a71b1cb90416e8054dc0f347
+
+COCOAPODS: 0.28.0
