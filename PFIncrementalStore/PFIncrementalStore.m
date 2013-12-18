@@ -207,7 +207,7 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
             return [self dictionaryResultOfFetchRequest:fetchRequest withContext:context error:error];
         }
         case NSCountResultType: {
-            return [NSNumber numberWithInteger:[self countResultOfFetchRequest:fetchRequest withContext:context error:error]];
+            return [self countResultOfFetchRequest:fetchRequest withContext:context error:error];
         }
     }
     
@@ -265,11 +265,12 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
     return [backingContext executeFetchRequest:backingFetchRequest error:error];
 }
 
--(NSUInteger)countResultOfFetchRequest:(NSFetchRequest *)fetchRequest
-                           withContext:(NSManagedObjectContext *)context
-                                 error:(NSError *__autoreleasing *)error {
+-(NSArray *)countResultOfFetchRequest:(NSFetchRequest *)fetchRequest
+                          withContext:(NSManagedObjectContext *)context
+                                error:(NSError *__autoreleasing *)error {
     
-    return [[self objectResultOfFetchRequest:fetchRequest withContext:context error:error] count];
+    int count = [[self objectResultOfFetchRequest:fetchRequest withContext:context error:error] count];
+    return @[[NSNumber numberWithInt:count]];
 }
 
 #pragma mark - Save Request methods
