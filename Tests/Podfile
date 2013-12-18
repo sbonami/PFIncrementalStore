@@ -1,0 +1,19 @@
+xcodeproj 'Tests'
+workspace '../PFIncrementalStore'
+inhibit_all_warnings!
+
+def import_pods
+  pod 'PFIncrementalStore', :path => '../'
+end
+
+target :ios do
+  platform :ios, '7.0'
+  link_with 'iOS Test'
+  import_pods
+end
+
+target :osx do
+  platform :osx, '10.9'
+  link_with 'OS X Test'
+  import_pods
+end
