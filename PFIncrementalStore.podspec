@@ -6,7 +6,6 @@ Pod::Spec.new do |s|
   s.license      = 'MIT'
 
   s.ios.deployment_target = '5.0'
-  s.osx.deployment_target = '10.7'
 
   s.source       = { :git => "https://github.com/sbonami/PFIncrementalStore.git", :tag => "0.0.1" }
   s.source_files = 'PFIncrementalStore', 'PFIncrementalStore/**/*.{h,m}'
@@ -17,5 +16,4 @@ Pod::Spec.new do |s|
   s.requires_arc = true
 
   s.ios.dependency 'Parse-iOS-SDK'
-  s.osx.dependency 'Parse-OSX-SDK'
 end
