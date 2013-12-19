@@ -89,6 +89,13 @@ BonAmi](https://github.com/sbonami/).
 [Scott BonAmi](http://github.com/sbonami)  
 [@snb828](https://twitter.com/snb828)
 
+## Disclaimer
+
+PFIncrementalStore is not affiliated, associated, authorized,
+endorsed by, or in any way officially connected with Parse.com,
+Parse Inc., or any of its subsidiaries or its affiliates. The
+official Parse web site is available at [www.parse.com](https://www.parse.com). 
+
 ## License
 
 PFIncrementalStore is available under the MIT license.
