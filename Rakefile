@@ -25,4 +25,17 @@ task :test => ['test:ios', 'test:osx'] do
   end
 end
 
+desc "Run the PFIncrementalStore Tests for target set in TEST_TARGET"
+task :test_for_target do
+  exit(-1) if !['ios', 'osx'].include? ENV['TEST_TARGET']
+
+  task_to_run = "test:#{ENV['TEST_TARGET']}"
+  Rake::Task[task_to_run].reenable
+  if Rake::Task[task_to_run].invoke
+    puts "\033[0;32m** Target tests executed successfully"
+  else
+    exit(-1)
+  end
+end
+
 task :default => 'test'
