@@ -44,14 +44,9 @@ Key and Secret, and minor programming knowledge. Parse subscription and
 API information can be obtained at
 [https://www.parse.com/](https://www.parse.com/)
 
-PFIncrementalStore requires Xcode 4.4 with either the [iOS
+PFIncrementalStore requires Xcode 4.4 with the [iOS
 5.0](http://developer.apple.com/library/ios/#releasenotes/General/WhatsNewIniPhoneOS/Articles/iOS5.html)
-or [Mac OS
-10.6](http://developer.apple.com/library/mac/#releasenotes/MacOSX/WhatsNewInOSX/Articles/MacOSX10_6.html#//apple_ref/doc/uid/TP40008898-SW7)
-([64-bit with modern Cocoa
-runtime](https://developer.apple.com/library/mac/#documentation/Cocoa/Conceptual/ObjCRuntimeGuide/Articles/ocrtVersionsPlatforms.html))
-SDK, as well as
-[Parse](https://www.parse.com/downloads/ios/parse-library/latest) 1.2 or
+SDK, as well as [Parse](https://www.parse.com/downloads/ios/parse-library/latest) 1.2 or
 higher.
 
 ## Installation
