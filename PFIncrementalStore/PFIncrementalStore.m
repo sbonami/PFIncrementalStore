@@ -43,6 +43,9 @@ NSString * const PFIncrementalStoreFaultingObjectIDKey = @"PFIncrementalStoreFau
 NSString * const PFIncrementalStoreFaultingRelationshipKey = @"PFIncrementalStoreFaultingRelationship";
 NSString * const PFIncrementalStorePersistentStoreRequestKey = @"PFIncrementalStorePersistentStoreRequest";
 
+#pragma mark - Block Definitions Methods
+
+typedef void (^PFInsertUpdateResponseBlock)(NSArray *managedObjects, NSArray *backingObjects);
 
 #pragma mark - Resource Identifier Methods
 
@@ -185,6 +188,7 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
                                 [context refreshObject:parentObject mergeChanges:YES];
                             }
                         }];
+                        
                         
                         [self notifyManagedObjectContext:context requestIsCompleted:YES forFetchRequest:fetchRequest fetchedObjectIDs:[managedObjects valueForKeyPath:@"objectID"]];
                     }];
@@ -674,8 +678,8 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
                     ofEntity:(NSEntityDescription *)entity
                  withContext:(NSManagedObjectContext *)context
                        error:(NSError *__autoreleasing *)error
-             completionBlock:(void (^)(NSArray *managedObjects, NSArray *backingObjects))completionBlock {
-    
+             completionBlock:(PFInsertUpdateResponseBlock)completionBlock {
+    return YES;
     if (!parseObjects) {
         return NO;
     }
