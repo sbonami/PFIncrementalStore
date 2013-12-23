@@ -716,7 +716,6 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
         [backingObject setValue:object.updatedAt forKey:kPFIncrementalStoreLastModifiedAttributeName];
         [backingObject setValuesFromParseObject:object];
         
-        NSLog(@"%@",backingObject);
         if (!backingObjectID) {
             [context insertObject:managedObject];
         }
