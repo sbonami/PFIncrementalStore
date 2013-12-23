@@ -17,13 +17,12 @@
 		963F1EA518582B89009C50DF /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 963F1E8E18582B77009C50DF /* XCTest.framework */; };
 		963F1EAB18582B89009C50DF /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 963F1EA918582B89009C50DF /* InfoPlist.strings */; };
 		963F1EAD18582B89009C50DF /* OS_X_Test.m in Sources */ = {isa = PBXBuildFile; fileRef = 963F1EAC18582B89009C50DF /* OS_X_Test.m */; };
-		966F86C3185FF8FE00178A45 /* ResourceIdentifier_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 96EE40E7185EB27B005887CC /* ResourceIdentifier_Tests.m */; };
-		966F86CC18600B0500178A45 /* RequiredMethod_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 966F86CB18600B0500178A45 /* RequiredMethod_Tests.m */; };
 		966F86CE18600D0900178A45 /* FetchRequest_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 966F86CD18600D0900178A45 /* FetchRequest_Tests.m */; };
-		966F86D018600D3600178A45 /* SaveRequest_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 966F86CF18600D3600178A45 /* SaveRequest_Tests.m */; };
 		966F86D118600D3B00178A45 /* FetchRequest_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 966F86CD18600D0900178A45 /* FetchRequest_Tests.m */; };
-		966F86D218600D3F00178A45 /* RequiredMethod_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 966F86CB18600B0500178A45 /* RequiredMethod_Tests.m */; };
-		96EE40E8185EB27B005887CC /* ResourceIdentifier_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 96EE40E7185EB27B005887CC /* ResourceIdentifier_Tests.m */; };
+		96C812BB1867D58D004B064E /* ResourceIdentifier_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 962407861866CAAB00520783 /* ResourceIdentifier_Tests.m */; };
+		96C812BC1867D58E004B064E /* ResourceIdentifier_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 962407861866CAAB00520783 /* ResourceIdentifier_Tests.m */; };
+		96C812BD1867D598004B064E /* RequiredMethod_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 966F86CB18600B0500178A45 /* RequiredMethod_Tests.m */; };
+		96C812BE1867D598004B064E /* RequiredMethod_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 966F86CB18600B0500178A45 /* RequiredMethod_Tests.m */; };
 		A5FC87A080E44629BA8786E0 /* libPods-osx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C0140CE70AB4E6EA97A5A2F /* libPods-osx.a */; };
 		B8EFD6E709E1404693BD3FA9 /* libPods-ios.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E84EF8B0347F4737BFABC2EC /* libPods-ios.a */; };
 /* End PBXBuildFile section */
@@ -37,6 +36,8 @@
 		9622F1061861416900020D4C /* TestManagedObjectModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TestManagedObjectModel.h; path = "Mock Objects/TestManagedObjectModel.h"; sourceTree = "<group>"; };
 		9622F1071861416900020D4C /* TestManagedObjectModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = TestManagedObjectModel.m; path = "Mock Objects/TestManagedObjectModel.m"; sourceTree = "<group>"; };
 		9622F1091861500B00020D4C /* PFIncrementalStore_PrivateMethods.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PFIncrementalStore_PrivateMethods.h; path = "Mock Objects/PFIncrementalStore_PrivateMethods.h"; sourceTree = "<group>"; };
+		962407861866CAAB00520783 /* ResourceIdentifier_Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ResourceIdentifier_Tests.m; path = "Shared Tests/ResourceIdentifier_Tests.m"; sourceTree = "<group>"; };
+		962407871866CAAB00520783 /* SaveRequest_Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SaveRequest_Tests.m; path = "Shared Tests/SaveRequest_Tests.m"; sourceTree = "<group>"; };
 		963F1E8B18582B77009C50DF /* iOS Test.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "iOS Test.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		963F1E8E18582B77009C50DF /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
 		963F1E9018582B77009C50DF /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
@@ -52,8 +53,6 @@
 		963F1EAE18582B89009C50DF /* OS X Test-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "OS X Test-Prefix.pch"; sourceTree = "<group>"; };
 		966F86CB18600B0500178A45 /* RequiredMethod_Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RequiredMethod_Tests.m; path = "Shared Tests/RequiredMethod_Tests.m"; sourceTree = "<group>"; };
 		966F86CD18600D0900178A45 /* FetchRequest_Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FetchRequest_Tests.m; path = "Shared Tests/FetchRequest_Tests.m"; sourceTree = "<group>"; };
-		966F86CF18600D3600178A45 /* SaveRequest_Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SaveRequest_Tests.m; path = "Shared Tests/SaveRequest_Tests.m"; sourceTree = "<group>"; };
-		96EE40E7185EB27B005887CC /* ResourceIdentifier_Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ResourceIdentifier_Tests.m; path = "Shared Tests/ResourceIdentifier_Tests.m"; sourceTree = "<group>"; };
 		E84EF8B0347F4737BFABC2EC /* libPods-ios.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-ios.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -169,10 +168,10 @@
 		96EE40E6185EB0C2005887CC /* Shared Tests */ = {
 			isa = PBXGroup;
 			children = (
-				96EE40E7185EB27B005887CC /* ResourceIdentifier_Tests.m */,
+				962407861866CAAB00520783 /* ResourceIdentifier_Tests.m */,
 				966F86CB18600B0500178A45 /* RequiredMethod_Tests.m */,
 				966F86CD18600D0900178A45 /* FetchRequest_Tests.m */,
-				966F86CF18600D3600178A45 /* SaveRequest_Tests.m */,
+				962407871866CAAB00520783 /* SaveRequest_Tests.m */,
 			);
 			name = "Shared Tests";
 			sourceTree = "<group>";
@@ -332,11 +331,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				966F86CE18600D0900178A45 /* FetchRequest_Tests.m in Sources */,
-				96EE40E8185EB27B005887CC /* ResourceIdentifier_Tests.m in Sources */,
 				9622F1051861402E00020D4C /* TestIncrementalStore.m in Sources */,
-				966F86CC18600B0500178A45 /* RequiredMethod_Tests.m in Sources */,
+				96C812BB1867D58D004B064E /* ResourceIdentifier_Tests.m in Sources */,
+				96C812BD1867D598004B064E /* RequiredMethod_Tests.m in Sources */,
 				963F1E9B18582B77009C50DF /* iOS_Test.m in Sources */,
-				966F86D018600D3600178A45 /* SaveRequest_Tests.m in Sources */,
 				9622F1081861416900020D4C /* TestManagedObjectModel.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -345,10 +343,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				966F86C3185FF8FE00178A45 /* ResourceIdentifier_Tests.m in Sources */,
-				966F86D218600D3F00178A45 /* RequiredMethod_Tests.m in Sources */,
 				963F1EAD18582B89009C50DF /* OS_X_Test.m in Sources */,
+				96C812BC1867D58E004B064E /* ResourceIdentifier_Tests.m in Sources */,
 				966F86D118600D3B00178A45 /* FetchRequest_Tests.m in Sources */,
+				96C812BE1867D598004B064E /* RequiredMethod_Tests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -431,7 +429,6 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
-				TEST_HOST = "$(BUNDLE_LOADER)";
 				WRAPPER_EXTENSION = xctest;
 			};
 			name = Debug;
@@ -474,7 +471,6 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
-				TEST_HOST = "$(BUNDLE_LOADER)";
 				VALIDATE_PRODUCT = YES;
 				WRAPPER_EXTENSION = xctest;
 			};

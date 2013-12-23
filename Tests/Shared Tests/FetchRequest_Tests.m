@@ -14,8 +14,9 @@
 #import "TestIncrementalStore.h"
 #import "TestManagedObjectModel.h"
 
-NSFetchRequest * FetchRequestWithRequestResultType(NSFetchRequestResultType resultType) {
-    NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] initWithEntityName:@"TestEntity"];
+NSFetchRequest * FetchRequestWithRequestResultTypeAndEntityDescription(NSFetchRequestResultType resultType, NSEntityDescription *entityDescription) {
+    NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
+    [fetchRequest setEntity:entityDescription];
     [fetchRequest setResultType:resultType];
     return fetchRequest;
 }
@@ -23,6 +24,8 @@ NSFetchRequest * FetchRequestWithRequestResultType(NSFetchRequestResultType resu
 SPEC_BEGIN(FetchRequest_Tests)
 
 __block NSFetchRequest *fetchRequest = nil;
+__block NSManagedObject *testEntity = nil;
+__block NSEntityDescription *testEntityDescription = nil;
 __block TestIncrementalStore *testIncrementalStore = nil;
 __block NSManagedObjectContext *testManagedObjectContext = nil;
 __block NSManagedObjectContext *testBackingManagedObjectContext = nil;
@@ -36,20 +39,22 @@ beforeEach(^{
                                                                                             configuration:nil URL:nil options:nil error:nil];
     
     // Create MOC for testing
-    testManagedObjectContext = [[NSManagedObjectContext alloc] init];
+    testManagedObjectContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
     [testManagedObjectContext setPersistentStoreCoordinator:persistentStoreCoordinator];
     
     // Create Backing Persistent Store Coordinator for the Test Incremental Store's Backing MOC
     [testIncrementalStore.backingPersistentStoreCoordinator addPersistentStoreWithType:NSInMemoryStoreType configuration:nil URL:nil options:nil error:nil];
     
     // Create Backing MOC for testing
-    testBackingManagedObjectContext = [[NSManagedObjectContext alloc] init];
+    testBackingManagedObjectContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
     [testBackingManagedObjectContext setPersistentStoreCoordinator:testIncrementalStore.backingPersistentStoreCoordinator];
+    
+    testEntityDescription = [NSEntityDescription entityForName:@"TestEntity" inManagedObjectContext:testManagedObjectContext];
 });
 
 describe(@"executeRequest:withContext:error:", ^{
     it(@"should call executeFetchRequest:withContext:error: if the request type is NSFetchRequestType", ^{
-        fetchRequest = FetchRequestWithRequestResultType(NSManagedObjectResultType);
+        fetchRequest = FetchRequestWithRequestResultTypeAndEntityDescription(NSManagedObjectResultType, testEntityDescription);
         
         [[testIncrementalStore should] receive:@selector(executeFetchRequest:withContext:error:) withArguments:fetchRequest, testManagedObjectContext, nil];
         
@@ -58,46 +63,143 @@ describe(@"executeRequest:withContext:error:", ^{
 });
 
 describe(@"executeFetchRequest:withContext:error:", ^{
+    __block PFQuery *testQuery = nil;
+    
     beforeEach(^{
         // Stub Test Incremental Store's Backing MOC
         [testIncrementalStore stub:@selector(backingManagedObjectContext) andReturn:testBackingManagedObjectContext];
         
+        // Setup and stub Test Entity
+        testEntity = [NSManagedObject mockWithName:testEntityDescription.name];
+        [testEntity stub:@selector(entity) andReturn:testEntityDescription];
+        
         // Stub Parse
-        PFQuery *query = [PFQuery mock];
-        [PFQuery stub:@selector(queryWithClassName:) andReturn:query withArguments:@"TestEntity"];
-        [query stub:@selector(findObjectsInBackgroundWithBlock:)];
+        testQuery = [PFQuery mock];
+        [PFQuery stub:@selector(queryWithClassName:predicate:) andReturn:testQuery withArguments:fetchRequest.entityName, fetchRequest.predicate];
+    });
+    
+    context(@"when the request type is invalid", ^{
+        beforeEach(^{
+            [testQuery stub:@selector(findObjectsInBackgroundWithBlock:)];
+        });
+        
+        it(@"should return an error", ^{
+            NSFetchRequest *invalidFetchRequest = FetchRequestWithRequestResultTypeAndEntityDescription(-1, testEntityDescription);
+            
+            NSError *error = nil;
+            [testIncrementalStore executeFetchRequest:invalidFetchRequest withContext:testManagedObjectContext error:&error];
+            
+            [[error.domain should] equal:kPFIncrementalStoreErrorDomain];
+            [[[error.userInfo objectForKey:NSLocalizedDescriptionKey] should] containString:@"Unsupported NSFetchRequestResultType"];
+        });
     });
     
     context(@"when the request type is NSManagedObjectResultType", ^{
         beforeEach(^{
-            fetchRequest = FetchRequestWithRequestResultType(NSManagedObjectResultType);
+            fetchRequest = FetchRequestWithRequestResultTypeAndEntityDescription(NSManagedObjectResultType, testEntityDescription);
+        });
+        
+        it(@"should notify user that sync has started with no objects returned", ^{
+            [testQuery stub:@selector(findObjectsInBackgroundWithBlock:)];
             
-            NSManagedObject *testEntity = [NSManagedObject mockWithName:@"TestEntity"];
-            [testBackingManagedObjectContext stub:@selector(executeFetchRequest:error:) andReturn:@[testEntity]];
+            [[testIncrementalStore shouldEventually] receive:@selector(notifyManagedObjectContext:requestIsCompleted:forFetchRequest:fetchedObjectIDs:) withArguments:testManagedObjectContext, theValue(NO), fetchRequest, nil];
+            
+            [testIncrementalStore executeFetchRequest:fetchRequest withContext:testManagedObjectContext error:nil];
         });
         
         context(@"-- Communication with Parse --", ^{
             context(@"when the parse query fails", ^{
-                pending(@"should notify user that sync is completed with no objects returned", ^{});
+                it(@"should notify user that sync is completed with no objects returned", ^{
+                    KWCaptureSpy *spy = [testQuery captureArgument:@selector(findObjectsInBackgroundWithBlock:) atIndex:0];
+                    
+                    [testIncrementalStore executeFetchRequest:fetchRequest withContext:testManagedObjectContext error:nil];
+                    
+                    PFArrayResultBlock blockToRun = spy.argument;
+                    
+                    [[testIncrementalStore should] receive:@selector(notifyManagedObjectContext:requestIsCompleted:forFetchRequest:fetchedObjectIDs:) withArguments:testManagedObjectContext, theValue(YES), fetchRequest, nil];
+                    
+                    blockToRun(nil, [NSError errorWithDomain:@"" code:0 userInfo:nil]);
+                });
             });
             
             context(@"when the parse query succeeds", ^{
-                pending(@"should insert new response objects into backing store", ^{});
+                __block PFObject *testParseObject = nil;
+                __block PFArrayResultBlock testParseReturnBlock = nil;
                 
-                pending(@"should update existing response objects in backing store", ^{});
+                beforeEach(^{
+                    // Stub Parse
+                    PFQuery *query = [PFQuery mock];
+                    KWCaptureSpy *spy = [query captureArgument:@selector(findObjectsInBackgroundWithBlock:) atIndex:0];
+                    [PFQuery stub:@selector(queryWithClassName:predicate:) andReturn:query withArguments:fetchRequest.entityName, fetchRequest.predicate];
+                    
+                    [testIncrementalStore executeFetchRequest:fetchRequest withContext:testManagedObjectContext error:nil];
+                    
+                    testParseObject = [PFObject mock];
+                    [testParseObject stub:@selector(objectId) andReturn:@"TestParseObjectID"];
+                    [testEntity stub:@selector(valueForKey:) andReturn:@"TestParseObjectID" withArguments:kPFIncrementalStoreResourceIdentifierAttributeName];
+                    
+                    [testBackingManagedObjectContext stub:@selector(executeFetchRequest:error:) andReturn:@[testEntity]];
+                    
+                    testParseReturnBlock = spy.argument;
+                });
                 
-                pending(@"should notify user that sync is completed with objects returned", ^{});
+                it(@"should create and update response objects", ^{
+                    [[testIncrementalStore should] receive:@selector(insertOrUpdateObjects:ofEntity:withContext:error:completionBlock:) andReturn:nil withArguments:@[testParseObject], testEntityDescription, any(), nil, any()];
+                    
+                    testParseReturnBlock(@[testParseObject], nil);
+                });
+                
+                it(@"should save intermediate context", ^{
+                    KWCaptureSpy *mocSpy = [testIncrementalStore captureArgument:@selector(insertOrUpdateObjects:ofEntity:withContext:error:completionBlock:) atIndex:2];
+                    
+                    KWCaptureSpy *callbackSpy = [testIncrementalStore captureArgument:@selector(insertOrUpdateObjects:ofEntity:withContext:error:completionBlock:) atIndex:4];
+                    testParseReturnBlock(@[testParseObject], nil);
+                    
+                    [[mocSpy.argument should] receive:@selector(save:) andReturn:theValue(YES)];
+                    
+                    PFInsertUpdateResponseBlock blockToRun = callbackSpy.argument;
+                    blockToRun(@[testEntity], @[testEntity]);
+                });
+                
+                it(@"should save backing store context", ^{
+                    KWCaptureSpy *callbackSpy = [testIncrementalStore captureArgument:@selector(insertOrUpdateObjects:ofEntity:withContext:error:completionBlock:) atIndex:4];
+                    testParseReturnBlock(@[testParseObject], nil);
+                    
+                    [[testBackingManagedObjectContext should] receive:@selector(save:) andReturn:theValue(YES)];
+                    
+                    PFInsertUpdateResponseBlock blockToRun = callbackSpy.argument;
+                    blockToRun(@[testEntity], @[testEntity]);
+                });
+                
+                it(@"should notify user that sync is completed with objects returned", ^{
+                    KWCaptureSpy *callbackSpy = [testIncrementalStore captureArgument:@selector(insertOrUpdateObjects:ofEntity:withContext:error:completionBlock:) atIndex:4];
+                    testParseReturnBlock(@[testParseObject], nil);
+                    
+                    [testEntity stub:@selector(valueForKey:) andReturn:@"TestEntityObjectID" withArguments:@"objectID"];
+                    
+                    [[testIncrementalStore should] receive:@selector(notifyManagedObjectContext:requestIsCompleted:forFetchRequest:fetchedObjectIDs:) withArguments:testManagedObjectContext, theValue(YES), fetchRequest, @[@"TestEntityObjectID"]];
+                    
+                    PFInsertUpdateResponseBlock blockToRun = callbackSpy.argument;
+                    blockToRun(@[testEntity], @[testEntity]);
+                });
             });
         });
         
         context(@"-- Communication with Backing Store --", ^{
-            pending(@"should return an array of NSManagedObjects", ^{
+            beforeEach(^{
+                [testEntity stub:@selector(valueForKey:) andReturn:@"TestParseObjectID" withArguments:kPFIncrementalStoreResourceIdentifierAttributeName];
+                [testBackingManagedObjectContext stub:@selector(executeFetchRequest:error:) andReturn:@[testEntity]];
+                
+                [testQuery stub:@selector(findObjectsInBackgroundWithBlock:)];
+            });
+            
+            it(@"should return an array of NSManagedObjects", ^{
                 id output = [testIncrementalStore executeFetchRequest:fetchRequest withContext:testManagedObjectContext error:nil];
                 [[output should] beKindOfClass:[NSArray class]];
                 [[[output objectAtIndex:0] should] beKindOfClass:[NSManagedObject class]];
             });
             
-            pending(@"returned NSManagedObjects should be faulted", ^{
+            it(@"returned NSManagedObjects should be faulted", ^{
                 id output = [testIncrementalStore executeFetchRequest:fetchRequest withContext:testManagedObjectContext error:nil];
                 [[output should] beKindOfClass:[NSArray class]];
                 NSManagedObject *firstObject = [output objectAtIndex:0];
@@ -108,13 +210,15 @@ describe(@"executeFetchRequest:withContext:error:", ^{
     
     context(@"when the request type is NSManagedObjectIDResultType", ^{
         beforeEach(^{
-            fetchRequest = FetchRequestWithRequestResultType(NSManagedObjectIDResultType);
+            fetchRequest = FetchRequestWithRequestResultTypeAndEntityDescription(NSManagedObjectIDResultType, testEntityDescription);
             
-            NSManagedObject *testEntity = [NSManagedObject mockWithName:@"TestEntity"];
+            [testEntity stub:@selector(valueForKey:) andReturn:@"TestParseObjectID" withArguments:kPFIncrementalStoreResourceIdentifierAttributeName];
             [testBackingManagedObjectContext stub:@selector(executeFetchRequest:error:) andReturn:@[testEntity]];
+            
+            [testQuery stub:@selector(findObjectsInBackgroundWithBlock:)];
         });
         
-        pending(@"should return an array of NSManagedObjectIDs", ^{
+        it(@"should return an array of NSManagedObjectIDs", ^{
             id output = [testIncrementalStore executeFetchRequest:fetchRequest withContext:testManagedObjectContext error:nil];
             [[output should] beKindOfClass:[NSArray class]];
             [[[output objectAtIndex:0] should] beKindOfClass:[NSManagedObjectID class]];
@@ -123,46 +227,36 @@ describe(@"executeFetchRequest:withContext:error:", ^{
     
     context(@"when the request type is NSDictionaryResultType", ^{
         beforeEach(^{
-            fetchRequest = FetchRequestWithRequestResultType(NSDictionaryResultType);
+            fetchRequest = FetchRequestWithRequestResultTypeAndEntityDescription(NSDictionaryResultType, testEntityDescription);
             
-            NSManagedObject *testEntity = [NSManagedObject mockWithName:@"TestEntity"];
+            [testEntity stub:@selector(valueForKey:) andReturn:@"TestParseObjectID" withArguments:kPFIncrementalStoreResourceIdentifierAttributeName];
             [testBackingManagedObjectContext stub:@selector(executeFetchRequest:error:) andReturn:@[testEntity]];
+            
+            [testQuery stub:@selector(findObjectsInBackgroundWithBlock:)];
         });
         
-        pending(@"should return an array of NSDictionaries", ^{
+        it(@"should return an array of NSDictionaries", ^{
             id output = [testIncrementalStore executeFetchRequest:fetchRequest withContext:testManagedObjectContext error:nil];
             [[output should] beKindOfClass:[NSArray class]];
-            [[[output objectAtIndex:0] should] beKindOfClass:[NSDictionary class]];
+            [[[output objectAtIndex:0] should] equal:testEntity];
         });
     });
     
     context(@"when the request type is NSCountResultType", ^{
         beforeEach(^{
-            fetchRequest = FetchRequestWithRequestResultType(NSCountResultType);
+            fetchRequest = FetchRequestWithRequestResultTypeAndEntityDescription(NSCountResultType, testEntityDescription);
             
-            NSManagedObject *testEntity = [NSManagedObject mockWithName:@"TestEntity"];
+            [testEntity stub:@selector(valueForKey:) andReturn:@"TestParseObjectID" withArguments:kPFIncrementalStoreResourceIdentifierAttributeName];
             [testBackingManagedObjectContext stub:@selector(executeFetchRequest:error:) andReturn:@[testEntity]];
+            
+            [testQuery stub:@selector(findObjectsInBackgroundWithBlock:)];
         });
         
-        pending(@"should return an array with one NSNumber value", ^{
+        it(@"should return an array with one NSNumber value", ^{
             id output = [testIncrementalStore executeFetchRequest:fetchRequest withContext:testManagedObjectContext error:nil];
             [[output should] beKindOfClass:[NSArray class]];
-            [[theValue([output count]) should] equal:theValue(1)];
-            [[[output objectAtIndex:0] should] beKindOfClass:[NSNumber class]];
-        });
-        
-        pending(@"returned NSNumber should equal the number of objects returned in the query", ^{
-            id output = [testIncrementalStore executeFetchRequest:fetchRequest withContext:testManagedObjectContext error:nil];
-            [[output should] beKindOfClass:[NSArray class]];
-            NSNumber *firstObject = [output objectAtIndex:0];
-            [[firstObject should] equal:[NSNumber numberWithInt:2]];
-        });
-    });
-    
-    context(@"when the request type is invalid", ^{
-        it(@"should raise an exception", ^{
-            NSFetchRequest *invalidFetchRequest = FetchRequestWithRequestResultType(-1);
-            [[theBlock(^{ [testManagedObjectContext executeFetchRequest:invalidFetchRequest error:nil]; }) shouldNot] raiseWithName:kPFIncrementalStoreUnimplementedMethodException];
+            [[output should] haveCountOf:1];
+            [[output should] equal:@[[NSNumber numberWithInt:1]]];
         });
     });
 });
