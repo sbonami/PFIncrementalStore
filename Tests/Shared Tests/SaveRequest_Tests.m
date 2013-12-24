@@ -97,6 +97,7 @@ describe(@"executeSaveChangesRequest:withContext:error:", ^{
         
         context(@"-- Communication with Parse --", ^{
             __block PFBooleanResultBlock blockToRun = nil;
+            
             beforeEach(^{
                 KWCaptureSpy *spy = [testObject captureArgument:@selector(saveInBackgroundWithBlock:) atIndex:0];
                 [testIncrementalStore executeSaveChangesRequest:saveChangesRequest withContext:testManagedObjectContext error:nil];
@@ -104,7 +105,7 @@ describe(@"executeSaveChangesRequest:withContext:error:", ^{
                 blockToRun = spy.argument;
             });
             
-            it(@"should notify user that save is completed while sending nserted object ids", ^{
+            it(@"should notify user that save is completed while sending inserted object ids", ^{
                 [[testIncrementalStore should] receive:@selector(notifyManagedObjectContext:requestIsCompleted:forSaveChangesRequest:changedObjectIDs:) withArguments:testManagedObjectContext, theValue(YES), any(), @[@"TestEntityObjectID"]];
                 
                 blockToRun(NO, [NSError errorWithDomain:@"" code:0 userInfo:nil]);
