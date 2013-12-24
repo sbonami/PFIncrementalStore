@@ -306,7 +306,7 @@ describe(@"executeSaveChangesRequest:withContext:error:", ^{
                 
                 KWCaptureSpy *spy = [testQuery captureArgument:@selector(getObjectInBackgroundWithId:block:) atIndex:1];
                 [testIncrementalStore executeSaveChangesRequest:saveChangesRequest withContext:testManagedObjectContext error:nil];
-
+                
                 fetchBlockToRun = spy.argument;
             });
             
@@ -386,17 +386,140 @@ describe(@"executeSaveChangesRequest:withContext:error:", ^{
     });
     
     context(@"with deleted objects", ^{
-        context(@"when the parse query fails", ^{
-            pending(@"should notify user that save is completed while sending no ids", ^{});
+        __block PFQuery *testQuery = nil;
+        __block NSManagedObjectID *testManagedObjectID = nil;
+        
+        beforeEach(^{
+            [saveChangesRequest stub:@selector(deletedObjects) andReturn:@[testEntity]];
+            
+            testManagedObjectID = [NSManagedObjectID nullMock];
+            
+            // Stub Parse
+            testQuery = [PFQuery mock];
+            [PFQuery stub:@selector(queryWithClassName:) andReturn:testQuery withArguments:testEntityDescription.name];
+            [testQuery stub:@selector(getObjectInBackgroundWithId:block:) andReturn:nil];
         });
         
-        context(@"when the parse query succeeds", ^{
-            pending(@"should insert new objects into backing store", ^{});
+        it(@"should fetch backing object ID from deleted object's resource identifier", ^{
+            [testEntity stub:@selector(objectID) andReturn:testManagedObjectID];
+            [testEntity stub:@selector(pf_resourceIdentifier) andReturn:@"TestParseObjectID"];
             
-            pending(@"should notify user that save is completed while sending object ids", ^{});
+            [testIncrementalStore stub:@selector(referenceObjectForObjectID:) andReturn:@"TestParseObjectID" withArguments:testManagedObjectID];
+            
+            [[testIncrementalStore should] receive:@selector(managedObjectIDForBackingObjectForEntity:withParseObjectId:) andReturn:nil withArguments:testEntityDescription, @"TestParseObjectID"];
+            
+            [testIncrementalStore executeSaveChangesRequest:saveChangesRequest withContext:testManagedObjectContext error:nil];
+        });
+        
+        it(@"should query parse for the object by it's parse object ID", ^{
+            [testEntity stub:@selector(objectID) andReturn:testManagedObjectID];
+            [testEntity stub:@selector(pf_resourceIdentifier) andReturn:@"TestParseObjectID"];
+            [testIncrementalStore stub:@selector(referenceObjectForObjectID:) andReturn:@"TestParseObjectID" withArguments:testManagedObjectID];
+            [testIncrementalStore stub:@selector(managedObjectIDForBackingObjectForEntity:withParseObjectId:) andReturn:testManagedObjectID];
+            
+            [[testQuery should] receive:@selector(getObjectInBackgroundWithId:block:) andReturn:nil withArguments:@"TestParseObjectID", any()];
+            
+            [testIncrementalStore executeSaveChangesRequest:saveChangesRequest withContext:testManagedObjectContext error:nil];
+        });
+        
+        it(@"should notify user that save is started for deleted object(s)", ^{
+            [testEntity stub:@selector(objectID) andReturn:testManagedObjectID];
+            [testEntity stub:@selector(pf_resourceIdentifier) andReturn:@"TestParseObjectID"];
+            [testIncrementalStore stub:@selector(referenceObjectForObjectID:) andReturn:@"TestParseObjectID" withArguments:testManagedObjectID];
+            [testIncrementalStore stub:@selector(managedObjectIDForBackingObjectForEntity:withParseObjectId:) andReturn:testManagedObjectID];
+            [testQuery stub:@selector(getObjectInBackgroundWithId:block:)];
+            
+            [[testIncrementalStore should] receive:@selector(notifyManagedObjectContext:requestIsCompleted:forSaveChangesRequest:changedObjectIDs:) withArguments:testManagedObjectContext, theValue(NO), any(), @[testManagedObjectID]];
+            
+            [testIncrementalStore executeSaveChangesRequest:saveChangesRequest withContext:testManagedObjectContext error:nil];
+        });
+        
+        context(@"-- Communication with Parse --", ^{
+            __block PFObjectResultBlock fetchBlockToRun = nil;
+            
+            beforeEach(^{
+                [testEntity stub:@selector(objectID) andReturn:testManagedObjectID];
+                [testEntity stub:@selector(pf_resourceIdentifier) andReturn:@"TestParseObjectID"];
+                [testIncrementalStore stub:@selector(referenceObjectForObjectID:) andReturn:@"TestParseObjectID" withArguments:testManagedObjectID];
+                [testIncrementalStore stub:@selector(managedObjectIDForBackingObjectForEntity:withParseObjectId:) andReturn:testManagedObjectID];
+                
+                KWCaptureSpy *spy = [testQuery captureArgument:@selector(getObjectInBackgroundWithId:block:) atIndex:1];
+                [testIncrementalStore executeSaveChangesRequest:saveChangesRequest withContext:testManagedObjectContext error:nil];
+                
+                fetchBlockToRun = spy.argument;
+            });
+            
+            context(@"for the object fetch result", ^{
+                context(@"when the parse fetch query fails", ^{
+                    it(@"should notify user that delete failed while sending ids", ^{
+                        [[testIncrementalStore should] receive:@selector(notifyManagedObjectContext:requestIsCompleted:forSaveChangesRequest:changedObjectIDs:) withArguments:testManagedObjectContext, theValue(YES), any(), @[testManagedObjectID]];
+                        
+                        fetchBlockToRun(nil, [NSError errorWithDomain:@"" code:0 userInfo:nil]);
+                    });
+                });
+                
+                context(@"when the parse fetch query succeeds", ^{
+                    it(@"should delete the parse object", ^{
+                        [[testObject should] receive:@selector(deleteInBackgroundWithBlock:)];
+                        
+                        fetchBlockToRun(testObject, nil);
+                    });
+                    
+                    context(@"-- Communication with Parse --", ^{
+                        __block PFBooleanResultBlock deleteBlockToRun = nil;
+                        
+                        beforeEach(^{
+                            KWCaptureSpy *spy = [testObject captureArgument:@selector(deleteInBackgroundWithBlock:) atIndex:0];
+                            fetchBlockToRun(testObject, nil);
+                            
+                            deleteBlockToRun = spy.argument;
+                        });
+                        
+                        context(@"when the parse save fails", ^{
+                            it(@"should notify user that delete is completed while sending ids", ^{
+                                [[testIncrementalStore should] receive:@selector(notifyManagedObjectContext:requestIsCompleted:forSaveChangesRequest:changedObjectIDs:) withArguments:testManagedObjectContext, theValue(YES), any(), @[testManagedObjectID]];
+                                
+                                deleteBlockToRun(NO, [NSError errorWithDomain:@"" code:0 userInfo:nil]);
+                            });
+                        });
+                        
+                        context(@"when the parse delete succeeds", ^{
+                            __block NSManagedObject *testBackingObject = nil;
+                            
+                            beforeEach(^{
+                                testBackingObject = [NSManagedObject nullMock];
+                                
+                                [testObject stub:@selector(objectId) andReturn:@"TestParseObjectID"];
+                            });
+                            
+                            it(@"should fetch backing object from backing MOC", ^{
+                                [[testBackingManagedObjectContext should] receive:@selector(existingObjectWithID:error:) andReturn:testBackingObject withArguments:testManagedObjectID, any()];
+                                
+                                deleteBlockToRun(YES, nil);
+                            });
+                            
+                            it(@"should remove the deleted object from the backing MOC and save", ^{
+                                [testBackingManagedObjectContext stub:@selector(existingObjectWithID:error:) andReturn:testBackingObject withArguments:testManagedObjectID, any()];
+                                
+                                [[testBackingManagedObjectContext should] receive:@selector(deleteObject:) withArguments:testBackingObject, theValue(YES)];
+                                [[testBackingManagedObjectContext should] receive:@selector(save:)];
+                                
+                                deleteBlockToRun(YES, nil);
+                            });
+                            
+                            it(@"should notify user that delete is completed while sending object ids", ^{
+                                [testBackingManagedObjectContext stub:@selector(existingObjectWithID:error:) andReturn:testBackingObject withArguments:testManagedObjectID, any()];
+                                
+                                [[testIncrementalStore should] receive:@selector(notifyManagedObjectContext:requestIsCompleted:forSaveChangesRequest:changedObjectIDs:) withArguments:testManagedObjectContext, theValue(YES), any(), @[testManagedObjectID]];
+                                
+                                deleteBlockToRun(YES, nil);
+                            });
+                        });
+                    });
+                });
+            });
         });
     });
 });
-
 
 SPEC_END
