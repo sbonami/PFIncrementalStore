@@ -391,23 +391,29 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
     for (NSManagedObject *deletedObject in [saveChangesRequest deletedObjects]) {
         NSManagedObjectID *backingObjectID = [self managedObjectIDForBackingObjectForEntity:[deletedObject entity] withParseObjectId:PFResourceIdentifierFromReferenceObject([self referenceObjectForObjectID:deletedObject.objectID])];
         
-        PFQuery *query = [[PFQuery alloc] initWithClassName:deletedObject.entity.name];
+        PFQuery *query = [PFQuery queryWithClassName:deletedObject.entity.name];
         [query getObjectInBackgroundWithId:deletedObject.pf_resourceIdentifier block:^(PFObject *object, NSError *error) {
-            [object deleteInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
-                if (succeeded) {
-                    NSLog(@"Delete %@ %@",object, object.objectId);
-                    
-                    [backingContext performBlockAndWait:^{
-                        NSManagedObject *backingObject = [backingContext existingObjectWithID:backingObjectID error:nil];
-                        [backingContext deleteObject:backingObject];
-                        [backingContext save:nil];
-                    }];
-                } else {
-                    NSLog(@"Delete Error: %@", error);
-                }
+            if (error) {
+                NSLog(@"Fetch Before Delete Error: %@",error);
                 
                 [self notifyManagedObjectContext:context requestIsCompleted:YES forSaveChangesRequest:saveChangesRequestCopy changedObjectIDs:@[deletedObject.objectID]];
-            }];
+            } else {
+                [object deleteInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
+                    if (succeeded) {
+                        NSLog(@"Delete %@ %@",object, object.objectId);
+                        
+                        [backingContext performBlockAndWait:^{
+                            NSManagedObject *backingObject = [backingContext existingObjectWithID:backingObjectID error:nil];
+                            [backingContext deleteObject:backingObject];
+                            [backingContext save:nil];
+                        }];
+                    } else {
+                        NSLog(@"Delete Error: %@", error);
+                    }
+                    
+                    [self notifyManagedObjectContext:context requestIsCompleted:YES forSaveChangesRequest:saveChangesRequestCopy changedObjectIDs:@[deletedObject.objectID]];
+                }];
+            }
         }];
         
         [self notifyManagedObjectContext:context requestIsCompleted:NO forSaveChangesRequest:saveChangesRequestCopy changedObjectIDs:@[deletedObject.objectID]];
