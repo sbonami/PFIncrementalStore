@@ -356,27 +356,33 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
     for (NSManagedObject *updatedObject in [saveChangesRequest updatedObjects]) {
         NSManagedObjectID *backingObjectID = [self managedObjectIDForBackingObjectForEntity:[updatedObject entity] withParseObjectId:PFResourceIdentifierFromReferenceObject([self referenceObjectForObjectID:updatedObject.objectID])];
         
-        PFQuery *query = [[PFQuery alloc] initWithClassName:updatedObject.entity.name];
+        PFQuery *query = [PFQuery queryWithClassName:updatedObject.entity.name];
         [query getObjectInBackgroundWithId:updatedObject.pf_resourceIdentifier block:^(PFObject *object, NSError *error) {
-            [object setValuesFromManagedObject:updatedObject];
-            [object saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
-                if (succeeded) {
-                    NSLog(@"Update %@ %@",object, object.objectId);
-                    
-                    [backingContext performBlockAndWait:^{
-                        NSManagedObject *backingObject = [backingContext existingObjectWithID:backingObjectID error:nil];
-                        [self updateBackingObject:backingObject withAttributeAndRelationshipValuesFromManagedObject:updatedObject];
-                        [backingContext save:nil];
-                    }];
-                    
-                    [context refreshObject:updatedObject mergeChanges:YES];
-                } else {
-                    NSLog(@"Update Error: %@", error);
-                    [context refreshObject:updatedObject mergeChanges:NO];
-                }
+            if (error) {
+                NSLog(@"Fetch Before Update Error: %@",error);
                 
                 [self notifyManagedObjectContext:context requestIsCompleted:YES forSaveChangesRequest:saveChangesRequestCopy changedObjectIDs:@[updatedObject.objectID]];
-            }];
+            } else {
+                [object setValuesFromManagedObject:updatedObject];
+                [object saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
+                    if (succeeded) {
+                        NSLog(@"Update %@ %@",object, object.objectId);
+                        
+                        [backingContext performBlockAndWait:^{
+                            NSManagedObject *backingObject = [backingContext existingObjectWithID:backingObjectID error:nil];
+                            [self updateBackingObject:backingObject withAttributeAndRelationshipValuesFromManagedObject:updatedObject];
+                            [backingContext save:nil];
+                        }];
+                        
+                        [context refreshObject:updatedObject mergeChanges:YES];
+                    } else {
+                        NSLog(@"Update Error: %@", error);
+                        [context refreshObject:updatedObject mergeChanges:NO];
+                    }
+                    
+                    [self notifyManagedObjectContext:context requestIsCompleted:YES forSaveChangesRequest:saveChangesRequestCopy changedObjectIDs:@[updatedObject.objectID]];
+                }];
+            }
         }];
         
         [self notifyManagedObjectContext:context requestIsCompleted:NO forSaveChangesRequest:saveChangesRequestCopy changedObjectIDs:@[updatedObject.objectID]];
