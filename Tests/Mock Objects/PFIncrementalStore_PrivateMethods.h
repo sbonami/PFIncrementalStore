@@ -6,6 +6,8 @@
 //
 //
 
+#import <Parse/Parse.h>
+
 #import "PFIncrementalStore.h"
 
 static NSString * const kPFIncrementalStoreErrorDomain = @"PFIncrementalStoreErrorDomain";
@@ -34,6 +36,13 @@ typedef void (^PFInsertUpdateResponseBlock)(NSArray *managedObjects, NSArray *ba
                        error:(NSError *__autoreleasing *)error
              completionBlock:(PFInsertUpdateResponseBlock)completionBlock;
 
+- (void)updateBackingObject:(NSManagedObject *)backingObject
+withAttributeAndRelationshipValuesFromManagedObject:(NSManagedObject *)managedObject;
+
+// Object ID Methods
+- (NSManagedObjectID *)managedObjectIDForBackingObjectForEntity:(NSEntityDescription *)entity
+                                              withParseObjectId:(NSString *)resourceIdentifier;
+
 // Notification Methods
 - (void)notifyManagedObjectContext:(NSManagedObjectContext *)context
                 requestIsCompleted:(BOOL)isCompleted
@@ -53,5 +62,19 @@ typedef void (^PFInsertUpdateResponseBlock)(NSArray *managedObjects, NSArray *ba
                 requestIsCompleted:(BOOL)isCompleted
                        forNewValuesForRelationship:(NSRelationshipDescription *)relationship
                                           forObjectWithID:(NSManagedObjectID *)objectID;
+
+@end
+
+@interface NSManagedObject (_PFIncrementalStore)
+
+@property (readwrite, nonatomic, copy, setter = pf_setResourceIdentifier:) NSString *pf_resourceIdentifier;
+
+- (void)setValuesFromParseObject:(PFObject *)parseObject;
+
+@end
+
+@interface PFObject (_PFIncrementalStore)
+
+- (void)setValuesFromManagedObject:(NSManagedObject *)managedObject;
 
 @end

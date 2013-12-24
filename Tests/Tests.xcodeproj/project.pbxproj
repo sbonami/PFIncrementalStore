@@ -23,6 +23,8 @@
 		96C812BC1867D58E004B064E /* ResourceIdentifier_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 962407861866CAAB00520783 /* ResourceIdentifier_Tests.m */; };
 		96C812BD1867D598004B064E /* RequiredMethod_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 966F86CB18600B0500178A45 /* RequiredMethod_Tests.m */; };
 		96C812BE1867D598004B064E /* RequiredMethod_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 966F86CB18600B0500178A45 /* RequiredMethod_Tests.m */; };
+		96C812BF1867D855004B064E /* SaveRequest_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 962407871866CAAB00520783 /* SaveRequest_Tests.m */; };
+		96C812C01867D856004B064E /* SaveRequest_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 962407871866CAAB00520783 /* SaveRequest_Tests.m */; };
 		A5FC87A080E44629BA8786E0 /* libPods-osx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C0140CE70AB4E6EA97A5A2F /* libPods-osx.a */; };
 		B8EFD6E709E1404693BD3FA9 /* libPods-ios.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E84EF8B0347F4737BFABC2EC /* libPods-ios.a */; };
 /* End PBXBuildFile section */
@@ -335,6 +337,7 @@
 				96C812BB1867D58D004B064E /* ResourceIdentifier_Tests.m in Sources */,
 				96C812BD1867D598004B064E /* RequiredMethod_Tests.m in Sources */,
 				963F1E9B18582B77009C50DF /* iOS_Test.m in Sources */,
+				96C812BF1867D855004B064E /* SaveRequest_Tests.m in Sources */,
 				9622F1081861416900020D4C /* TestManagedObjectModel.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -347,6 +350,7 @@
 				96C812BC1867D58E004B064E /* ResourceIdentifier_Tests.m in Sources */,
 				966F86D118600D3B00178A45 /* FetchRequest_Tests.m in Sources */,
 				96C812BE1867D598004B064E /* RequiredMethod_Tests.m in Sources */,
+				96C812C01867D856004B064E /* SaveRequest_Tests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
