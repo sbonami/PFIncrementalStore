@@ -3,6 +3,7 @@ workspace '../PFIncrementalStore'
 inhibit_all_warnings!
 
 def import_pods
+  pod 'Kiwi/XCTest'
   pod 'PFIncrementalStore', :path => '../'
 end
 
