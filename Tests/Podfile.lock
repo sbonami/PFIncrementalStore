@@ -1,5 +1,5 @@
 PODS:
-  - Facebook-iOS-SDK (3.10.0)
+  - Facebook-iOS-SDK (3.11.0)
   - Kiwi/ARC (2.2.3)
   - Kiwi/NonARC (2.2.3)
   - Kiwi/XCTest (2.2.3):
@@ -19,9 +19,9 @@ EXTERNAL SOURCES:
     :path: ../
 
 SPEC CHECKSUMS:
-  Facebook-iOS-SDK: ef402579aeb30cf0c4a6370fb0a927e3dc3059e5
+  Facebook-iOS-SDK: 2eb12f9ed04f3d3956f0a4fb0e4e60c824dcd101
   Kiwi: 04c51e880831d291748ec702d42c4101f7eb95c9
   Parse-iOS-SDK: f57fc3a7b80c7135d5acdc55a0fbc3ab2d1d5027
-  PFIncrementalStore: 0bbe532ea54e72b51f25b1e78893fdcffd8f30f8
+  PFIncrementalStore: 66ba30a0b62865eb65861888edaf3ea61772b902
 
 COCOAPODS: 0.28.0
