@@ -120,7 +120,7 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
 
 @implementation PFObject (_PFIncrementalStore)
 
-- (void)setValuesFromManagedObject:(NSManagedObject *)managedObject {
+- (void)setValuesFromManagedObject:(NSManagedObject *)managedObject withSaveCallbacks:(NSMutableDictionary **)saveCallbacks {
     NSMutableDictionary *mutableAttributeValues = [managedObject.entity.attributesByName mutableCopy];
     [mutableAttributeValues removeObjectForKey:kPFIncrementalStoreResourceIdentifierAttributeName];
     [mutableAttributeValues removeObjectForKey:kPFIncrementalStoreLastModifiedAttributeName];
@@ -128,6 +128,33 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
         id value = [managedObject valueForKey:attributeName];
         if (value) {
             [self setObject:value forKey:attributeName];
+        }
+    }
+    
+    for (NSString *relationshipName in managedObject.entity.relationshipsByName) {
+        __block NSRelationshipDescription *relationship = [managedObject.entity.relationshipsByName objectForKey:relationshipName];
+        id value = [managedObject valueForKey:relationshipName];
+        if (value) {
+            if (!relationship.isToMany) {
+                NSManagedObject *relatedManagedObject = (NSManagedObject *)value;
+                if (relatedManagedObject.pf_resourceIdentifier) {
+                    PFQuery *query = [PFQuery queryWithClassName:relationship.destinationEntity.name];
+                    PFObject *relatedParseObject = [query getObjectWithId:PFResourceIdentifierFromReferenceObject(relatedManagedObject.pf_resourceIdentifier)];
+                    [self setObject:relatedParseObject forKey:relationshipName];
+                } else {
+                    __block PFObject *blockObject = self;
+                    PFObjectResultBlock connectRelationship = ^(PFObject *object, NSError *error) {
+                        [blockObject setObject:object forKey:relationship.name];
+                        [blockObject saveInBackground];
+                    };
+                    
+                    if (![*saveCallbacks objectForKey:relatedManagedObject.objectID]) {
+                        [*saveCallbacks setObject:[NSMutableArray array]
+                                           forKey:relatedManagedObject.objectID];
+                    }
+                    [[*saveCallbacks objectForKey:relatedManagedObject.objectID] addObject:connectRelationship];
+                }
+            }
         }
     }
 }
@@ -138,6 +165,7 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
 
 @implementation PFIncrementalStore {
 @private
+    NSMutableDictionary *_parseSaveCallbacks;
     NSCache *_backingObjectIDByObjectID;
     NSMutableDictionary *_registeredObjectIDsByEntityNameAndNestedResourceIdentifier;
     NSPersistentStoreCoordinator *_backingPersistentStoreCoordinator;
@@ -279,6 +307,21 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
 
 #pragma mark - Save Request methods
 
+- (NSMutableDictionary *)parseSaveCallbacks {
+    if (_parseSaveCallbacks == nil) {
+        _parseSaveCallbacks = [NSMutableDictionary dictionary];
+    }
+    return _parseSaveCallbacks;
+}
+
+- (void)addParseSaveCallbacks:(NSArray*)callbacks forObject:(NSManagedObjectID *)objectID {
+    NSArray *saveCallbacks = [[self parseSaveCallbacks] objectForKey:objectID];
+    if (saveCallbacks == nil) {
+        saveCallbacks = [NSMutableArray arrayWithArray:callbacks];
+    }
+    [[self parseSaveCallbacks] setObject:callbacks forKey:objectID];
+}
+
 - (id)executeSaveChangesRequest:(NSSaveChangesRequest *)saveChangesRequest
                     withContext:(NSManagedObjectContext *)context
                           error:(NSError *__autoreleasing *)error {
@@ -288,9 +331,16 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
     // NSManagedObjectContext removes object references from an NSSaveChangesRequest as each object is saved, so create a copy of the original in order to send useful information in AFIncrementalStoreContextDidSaveRemoteValues notification.
     NSSaveChangesRequest *saveChangesRequestCopy = [[NSSaveChangesRequest alloc] initWithInsertedObjects:[saveChangesRequest.insertedObjects copy] updatedObjects:[saveChangesRequest.updatedObjects copy] deletedObjects:[saveChangesRequest.deletedObjects copy] lockedObjects:[saveChangesRequest.lockedObjects copy]];
     
+    
     for (NSManagedObject *insertedObject in [saveChangesRequest insertedObjects]) {
         PFObject *object = [PFObject objectWithClassName:insertedObject.entity.name];
-        [object setValuesFromManagedObject:insertedObject];
+        
+        __block NSMutableDictionary *saveCallbacks = [NSMutableDictionary dictionary];
+        [object setValuesFromManagedObject:insertedObject withSaveCallbacks:&saveCallbacks];
+        for (NSManagedObjectID *relatedObjectID in saveCallbacks) {
+            [self addParseSaveCallbacks:[saveCallbacks objectForKey:relatedObjectID] forObject:relatedObjectID];
+        }
+        
         [object saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
             if (succeeded) {
                 NSLog(@"Insert %@ %@",object, object.objectId);
@@ -316,6 +366,8 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
                     [self updateBackingObject:backingObject withAttributeAndRelationshipValuesFromManagedObject:insertedObject];
                     [backingContext save:nil];
                 }];
+                
+                [self performSaveCallbacksWithParseObject:object andManagedObjectID:insertedObject.objectID];
                 
                 [insertedObject willChangeValueForKey:@"objectID"];
                 [context obtainPermanentIDsForObjects:[NSArray arrayWithObject:insertedObject] error:nil];
@@ -363,7 +415,7 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
                 
                 [self notifyManagedObjectContext:context requestIsCompleted:YES forSaveChangesRequest:saveChangesRequestCopy changedObjectIDs:@[updatedObject.objectID]];
             } else {
-                [object setValuesFromManagedObject:updatedObject];
+                [object setValuesFromManagedObject:updatedObject withSaveCallbacks:nil];
                 [object saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
                     if (succeeded) {
                         NSLog(@"Update %@ %@",object, object.objectId);
@@ -420,6 +472,16 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
     }
     
     return [NSArray array];
+}
+
+-(void)performSaveCallbacksWithParseObject:(PFObject *)parseObject andManagedObjectID:(NSManagedObjectID *)managedObjectID {
+    NSArray *saveCallbacks = [[self parseSaveCallbacks] objectForKey:managedObjectID];
+    if (saveCallbacks != nil) {
+        for (PFObjectResultBlock callback in saveCallbacks) {
+            callback(parseObject, nil);
+        }
+        [[self parseSaveCallbacks] removeObjectForKey:managedObjectID];
+    }
 }
 
 #pragma mark - NSIncrementalStore
@@ -748,7 +810,6 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
     
     return YES;
 }
-
 
 - (void)updateBackingObject:(NSManagedObject *)backingObject
 withAttributeAndRelationshipValuesFromManagedObject:(NSManagedObject *)managedObject {
