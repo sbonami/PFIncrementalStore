@@ -150,6 +150,7 @@ describe(@"executeFetchRequest:withContext:error:", ^{
                 });
                 
                 it(@"should save intermediate context", ^{
+                    [testIncrementalStore stub:@selector(insertOrUpdateObjects:ofEntity:withContext:error:completionBlock:) andReturn:NO];
                     KWCaptureSpy *mocSpy = [testIncrementalStore captureArgument:@selector(insertOrUpdateObjects:ofEntity:withContext:error:completionBlock:) atIndex:2];
                     
                     KWCaptureSpy *callbackSpy = [testIncrementalStore captureArgument:@selector(insertOrUpdateObjects:ofEntity:withContext:error:completionBlock:) atIndex:4];
@@ -162,6 +163,7 @@ describe(@"executeFetchRequest:withContext:error:", ^{
                 });
                 
                 it(@"should save backing store context", ^{
+                    [testIncrementalStore stub:@selector(insertOrUpdateObjects:ofEntity:withContext:error:completionBlock:) andReturn:NO];
                     KWCaptureSpy *callbackSpy = [testIncrementalStore captureArgument:@selector(insertOrUpdateObjects:ofEntity:withContext:error:completionBlock:) atIndex:4];
                     testParseReturnBlock(@[testParseObject], nil);
                     
@@ -172,6 +174,7 @@ describe(@"executeFetchRequest:withContext:error:", ^{
                 });
                 
                 it(@"should notify user that sync is completed with objects returned", ^{
+                    [testIncrementalStore stub:@selector(insertOrUpdateObjects:ofEntity:withContext:error:completionBlock:) andReturn:NO];
                     KWCaptureSpy *callbackSpy = [testIncrementalStore captureArgument:@selector(insertOrUpdateObjects:ofEntity:withContext:error:completionBlock:) atIndex:4];
                     testParseReturnBlock(@[testParseObject], nil);
                     
