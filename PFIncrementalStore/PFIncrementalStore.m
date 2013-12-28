@@ -753,7 +753,7 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
                  withContext:(NSManagedObjectContext *)context
                        error:(NSError *__autoreleasing *)error
              completionBlock:(PFInsertUpdateResponseBlock)completionBlock {
-    return YES;
+    
     if (!parseObjects) {
         return NO;
     }
@@ -798,7 +798,35 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
             [context insertObject:managedObject];
         }
         
-#warning RELATIONSHIP NOT IMPLEMENTED
+        for(NSString *relationshipName in entity.relationshipsByName) {
+            NSRelationshipDescription *relationship = [[entity relationshipsByName] valueForKey:relationshipName];
+            id relatedObject = [object objectForKey:relationshipName];
+            if (!relationship || (relationship.isOptional && (!relatedObject || [relatedObject isEqual:[NSNull null]]))) {
+                continue;
+            }
+            
+            if (!relatedObject || [relatedObject isEqual:[NSNull null]] || ([relatedObject conformsToProtocol:@protocol(NSFastEnumeration)] && [relatedObject count] == 0)) {
+                [managedObject setValue:nil forKey:relationshipName];
+                [backingObject setValue:nil forKey:relationshipName];
+                continue;
+            }
+            
+            NSArray *relatedObjectArray = (relationship.isToMany) ? relatedObject : @[relatedObject];
+            [self insertOrUpdateObjects:relatedObjectArray ofEntity:relationship.destinationEntity withContext:context error:error completionBlock:^(NSArray *managedObjects, NSArray *backingObjects) {
+                if ([relationship isToMany]) {
+                    if ([relationship isOrdered]) {
+                        [managedObject setValue:[NSOrderedSet orderedSetWithArray:managedObjects] forKey:relationship.name];
+                        [backingObject setValue:[NSOrderedSet orderedSetWithArray:backingObjects] forKey:relationship.name];
+                    } else {
+                        [managedObject setValue:[NSSet setWithArray:managedObjects] forKey:relationship.name];
+                        [backingObject setValue:[NSSet setWithArray:backingObjects] forKey:relationship.name];
+                    }
+                } else {
+                    [managedObject setValue:[managedObjects lastObject] forKey:relationship.name];
+                    [backingObject setValue:[backingObjects lastObject] forKey:relationship.name];
+                }
+            }];
+        }
         
         [mutableManagedObjects addObject:managedObject];
         [mutableBackingObjects addObject:backingObject];
