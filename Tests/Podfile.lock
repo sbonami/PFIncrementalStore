@@ -7,7 +7,7 @@ PODS:
     - Kiwi/NonARC
   - Parse-iOS-SDK (1.2.17):
     - Facebook-iOS-SDK (~> 3.7)
-  - PFIncrementalStore (0.0.1):
+  - PFIncrementalStore (0.0.2):
     - Parse-iOS-SDK
 
 DEPENDENCIES:
@@ -22,6 +22,6 @@ SPEC CHECKSUMS:
   Facebook-iOS-SDK: 2eb12f9ed04f3d3956f0a4fb0e4e60c824dcd101
   Kiwi: 04c51e880831d291748ec702d42c4101f7eb95c9
   Parse-iOS-SDK: f57fc3a7b80c7135d5acdc55a0fbc3ab2d1d5027
-  PFIncrementalStore: 66ba30a0b62865eb65861888edaf3ea61772b902
+  PFIncrementalStore: 0b40f63d018a3e064f4099681bc607d48962312e
 
-COCOAPODS: 0.28.0
+COCOAPODS: 0.29.0

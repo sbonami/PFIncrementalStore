@@ -4,7 +4,7 @@ inhibit_all_warnings!
 
 def import_pods
   pod 'Kiwi/XCTest'
-  pod 'PFIncrementalStore', :path => '../'
+  pod 'PFIncrementalStore', :path => "../"
 end
 
 target :ios, exclusive: true do
