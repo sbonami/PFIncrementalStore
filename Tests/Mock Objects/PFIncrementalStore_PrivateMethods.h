@@ -75,6 +75,6 @@ withAttributeAndRelationshipValuesFromManagedObject:(NSManagedObject *)managedOb
 
 @interface PFObject (_PFIncrementalStore)
 
-- (void)setValuesFromManagedObject:(NSManagedObject *)managedObject;
+- (void)setValuesFromManagedObject:(NSManagedObject *)managedObject withSaveCallbacks:(NSMutableDictionary **)saveCallbacks;
 
 @end

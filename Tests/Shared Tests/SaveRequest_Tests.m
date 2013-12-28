@@ -77,11 +77,11 @@ describe(@"executeSaveChangesRequest:withContext:error:", ^{
             [saveChangesRequest stub:@selector(insertedObjects) andReturn:@[testEntity]];
             
             [testObject stub:@selector(saveInBackgroundWithBlock:)];
-            [testObject stub:@selector(setValuesFromManagedObject:) andReturn:nil];
+            [testObject stub:@selector(setValuesFromManagedObject:withSaveCallbacks:) andReturn:nil];
         });
         
         it(@"should set the Parse Object values from the managed object", ^{
-            [[testObject should] receive:@selector(setValuesFromManagedObject:)];
+            [[testObject should] receive:@selector(setValuesFromManagedObject:withSaveCallbacks:)];
             
             [testIncrementalStore executeSaveChangesRequest:saveChangesRequest withContext:testManagedObjectContext error:nil];
         });
@@ -323,13 +323,13 @@ describe(@"executeSaveChangesRequest:withContext:error:", ^{
                     it(@"should update the fetched object with the values from the updated object", ^{
                         [testObject stub:@selector(saveInBackgroundWithBlock:)];
                         
-                        [[testObject should] receive:@selector(setValuesFromManagedObject:) withArguments:testEntity];
+                        [[testObject should] receive:@selector(setValuesFromManagedObject:withSaveCallbacks:) withArguments:testEntity, nil];
                         
                         fetchBlockToRun(testObject, nil);
                     });
                     
                     it(@"should save the parse object", ^{
-                        [testObject stub:@selector(setValuesFromManagedObject:)];
+                        [testObject stub:@selector(setValuesFromManagedObject:withSaveCallbacks:)];
                         
                         [[testObject should] receive:@selector(saveInBackgroundWithBlock:)];
                         
@@ -340,7 +340,7 @@ describe(@"executeSaveChangesRequest:withContext:error:", ^{
                         __block PFBooleanResultBlock saveBlockToRun = nil;
                         
                         beforeEach(^{
-                            [testObject stub:@selector(setValuesFromManagedObject:)];
+                            [testObject stub:@selector(setValuesFromManagedObject:withSaveCallbacks:)];
                             
                             KWCaptureSpy *spy = [testObject captureArgument:@selector(saveInBackgroundWithBlock:) atIndex:0];
                             fetchBlockToRun(testObject, nil);
