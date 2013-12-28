@@ -8,5 +8,7 @@ script: rake test_for_target
 env:
     - TEST_TARGET=ios
     - TEST_TARGET=osx
-allow_failures:
-    - env: "TEST_TARGET=osx"
+matrix:
+    fast_finish: true
+    allow_failures:
+        - env: "TEST_TARGET=osx"
