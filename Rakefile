@@ -5,12 +5,12 @@ namespace :test do
 
   desc "Run the PFIncrementalStore Tests for iOS"
   task :ios => :prepare do
-    $ios_success = system("xctool -workspace PFIncrementalStore.xcworkspace -scheme 'iOS Test' -sdk iphonesimulator -configuration Release test -test-sdk iphonesimulator")
+    $ios_success = $target_success = system("xctool -workspace PFIncrementalStore.xcworkspace -scheme 'iOS Test' -sdk iphonesimulator -configuration Release test -test-sdk iphonesimulator")
   end
 
   desc "Run the PFIncrementalStore Tests for Mac OS X"
   task :osx => :prepare do
-    $osx_success = system("xctool -workspace PFIncrementalStore.xcworkspace -scheme 'OS X Test' -sdk macosx -configuration Release test -test-sdk macosx")
+    $osx_success = $target_success = system("xctool -workspace PFIncrementalStore.xcworkspace -scheme 'OS X Test' -sdk macosx -configuration Release test -test-sdk macosx")
   end
 end
 
@@ -31,7 +31,8 @@ task :test_for_target do
 
   task_to_run = "test:#{ENV['TEST_TARGET']}"
   Rake::Task[task_to_run].reenable
-  if Rake::Task[task_to_run].invoke
+  Rake::Task[task_to_run].invoke
+  if $target_success
     puts "\033[0;32m** Target tests executed successfully"
   else
     exit(-1)
