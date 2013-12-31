@@ -14,10 +14,14 @@
          location = "group:PFIncrementalStore/PFIncrementalStore.m">
       </FileRef>
    </Group>
-   <FileRef
-      location = "group:Tests/Tests.xcodeproj">
-   </FileRef>
-   <FileRef
-      location = "group:Tests/Pods/Pods.xcodeproj">
-   </FileRef>
+   <Group
+      location = "container:"
+      name = "Tests">
+      <FileRef
+         location = "group:Tests/Tests.xcodeproj">
+      </FileRef>
+      <FileRef
+         location = "group:Tests/Pods/Pods.xcodeproj">
+      </FileRef>
+   </Group>
 </Workspace>
