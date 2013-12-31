@@ -16,6 +16,20 @@
    </Group>
    <Group
       location = "container:"
+      name = "Examples">
+      <Group
+         location = "container:"
+         name = "Basic Example">
+         <FileRef
+            location = "group:Examples/Basic Example/Basic Example.xcodeproj">
+         </FileRef>
+         <FileRef
+            location = "group:Examples/Basic Example/Pods/Pods.xcodeproj">
+         </FileRef>
+      </Group>
+   </Group>
+   <Group
+      location = "container:"
       name = "Tests">
       <FileRef
          location = "group:Tests/Tests.xcodeproj">
