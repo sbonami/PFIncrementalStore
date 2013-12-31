@@ -159,6 +159,19 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
     }
 }
 
+- (id)relatedObjectsForRelationship:(NSRelationshipDescription *)relationship {
+    id relatedObjects = nil;
+    if (relationship.isToMany) {
+        PFQuery *query = [PFQuery queryWithClassName:relationship.destinationEntity.name];
+        [query whereKey:relationship.inverseRelationship.name equalTo:self];
+        relatedObjects = [query findObjects];
+    } else {
+        relatedObjects = [self objectForKey:relationship.name];
+    }
+    
+    return relatedObjects;
+}
+
 @end
 
 #pragma mark - PFIncrementalStore implementation
@@ -623,7 +636,7 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
                 [self notifyManagedObjectContext:context requestIsCompleted:YES forNewValuesForRelationship:relationship forObjectWithID:objectID];
             } else {
                 [childContext performBlock:^{
-                    id relatedObjects = [object objectForKey:relationship.name];
+                    id relatedObjects = [object relatedObjectsForRelationship:relationship];
                     if (relatedObjects && ![relatedObjects conformsToProtocol:@protocol(NSFastEnumeration)]) {
                         relatedObjects = @[relatedObjects];
                     }
@@ -778,6 +791,12 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
             managedObject = [context existingObjectWithID:[self managedObjectIDForEntity:entity withParseObjectId:object.objectId] error:nil];
         }];
         
+        if ([context.insertedObjects containsObject:managedObject] || [context.updatedObjects containsObject:managedObject]) {
+            continue;
+        }
+        
+        [object fetchIfNeeded];
+        
         [managedObject setValuesFromParseObject:object];
         
         NSManagedObjectID *backingObjectID = [self managedObjectIDForBackingObjectForEntity:entity withParseObjectId:object.objectId];
@@ -800,11 +819,12 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
         
         for(NSString *relationshipName in entity.relationshipsByName) {
             NSRelationshipDescription *relationship = [[entity relationshipsByName] valueForKey:relationshipName];
-            id relatedObject = [object objectForKey:relationshipName];
-            if (!relationship || (relationship.isOptional && (!relatedObject || [relatedObject isEqual:[NSNull null]]))) {
+            
+            if (!relationship || relationship.isOptional) {
                 continue;
             }
             
+            id relatedObject = [object relatedObjectsForRelationship:relationship];
             if (!relatedObject || [relatedObject isEqual:[NSNull null]] || ([relatedObject conformsToProtocol:@protocol(NSFastEnumeration)] && [relatedObject count] == 0)) {
                 [managedObject setValue:nil forKey:relationshipName];
                 [backingObject setValue:nil forKey:relationshipName];
