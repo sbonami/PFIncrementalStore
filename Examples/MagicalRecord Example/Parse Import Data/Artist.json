@@ -1,0 +1,14 @@
+{ "results": [
+{
+  "artistName": "Van Halen",
+  "createdAt": "2013-12-31T19:07:37.760Z",
+  "updatedAt": "2013-12-31T19:24:20.734Z",
+  "objectId": "OqlyKuEigo"
+},
+{
+  "artistName": "Miley Cyrus",
+  "createdAt": "2013-12-31T19:07:37.774Z",
+  "updatedAt": "2013-12-31T19:23:34.098Z",
+  "objectId": "cNhFGzTmI8"
+}
+] }

@@ -27,6 +27,16 @@
             location = "group:Examples/Basic Example/Pods/Pods.xcodeproj">
          </FileRef>
       </Group>
+      <Group
+         location = "container:"
+         name = "MagicalRecord Example">
+         <FileRef
+            location = "group:Examples/MagicalRecord Example/MagicalRecord Example.xcodeproj">
+         </FileRef>
+         <FileRef
+            location = "group:Examples/MagicalRecord Example/Pods/Pods.xcodeproj">
+         </FileRef>
+      </Group>
    </Group>
    <Group
       location = "container:"

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model userDefinedModelVersionIdentifier="" type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="3401" systemVersion="13A3017" minimumToolsVersion="Automatic" macOSVersion="Automatic" iOSVersion="Automatic">
+    <entity name="Artist" representedClassName="Artist" syncable="YES">
+        <attribute name="artistName" attributeType="String" syncable="YES"/>
+        <relationship name="artistSongs" toMany="YES" deletionRule="Cascade" destinationEntity="Song" inverseName="songArtist" inverseEntity="Song" syncable="YES"/>
+    </entity>
+    <entity name="Genre" representedClassName="Genre" syncable="YES">
+        <attribute name="genreName" optional="YES" attributeType="String" syncable="YES"/>
+        <relationship name="genreSongs" toMany="YES" deletionRule="Nullify" destinationEntity="Song" inverseName="songGenre" inverseEntity="Song" syncable="YES"/>
+    </entity>
+    <entity name="Song" representedClassName="Song" syncable="YES">
+        <attribute name="songTitle" attributeType="String" syncable="YES"/>
+        <relationship name="songArtist" maxCount="1" deletionRule="Nullify" destinationEntity="Artist" inverseName="artistSongs" inverseEntity="Artist" syncable="YES"/>
+        <relationship name="songGenre" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Genre" inverseName="genreSongs" inverseEntity="Genre" syncable="YES"/>
+    </entity>
+    <elements>
+        <element name="Artist" positionX="0" positionY="0" width="0" height="0"/>
+        <element name="Genre" positionX="0" positionY="0" width="0" height="0"/>
+        <element name="Song" positionX="0" positionY="0" width="0" height="0"/>
+    </elements>
+</model>
