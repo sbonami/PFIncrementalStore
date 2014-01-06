@@ -148,11 +148,13 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
                         [blockObject saveInBackground];
                     };
                     
-                    if (![*saveCallbacks objectForKey:relatedManagedObject.objectID]) {
-                        [*saveCallbacks setObject:[NSMutableArray array]
-                                           forKey:relatedManagedObject.objectID];
+                    if (saveCallbacks) {
+                        if (![*saveCallbacks objectForKey:relatedManagedObject.objectID]) {
+                            [*saveCallbacks setObject:[NSMutableArray array]
+                                               forKey:relatedManagedObject.objectID];
+                        }
+                        [[*saveCallbacks objectForKey:relatedManagedObject.objectID] addObject:connectRelationship];
                     }
-                    [[*saveCallbacks objectForKey:relatedManagedObject.objectID] addObject:connectRelationship];
                 }
             }
         }
@@ -314,8 +316,8 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
                           withContext:(NSManagedObjectContext *)context
                                 error:(NSError *__autoreleasing *)error {
     
-    int count = [[self objectResultOfFetchRequest:fetchRequest withContext:context error:error] count];
-    return @[[NSNumber numberWithInt:count]];
+    NSUInteger count = [[self objectResultOfFetchRequest:fetchRequest withContext:context error:error] count];
+    return @[[NSNumber numberWithInteger:count]];
 }
 
 #pragma mark - Save Request methods
@@ -332,7 +334,7 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
     if (saveCallbacks == nil) {
         saveCallbacks = [NSMutableArray arrayWithArray:callbacks];
     }
-    [[self parseSaveCallbacks] setObject:callbacks forKey:objectID];
+    [[self parseSaveCallbacks] setObject:saveCallbacks forKey:objectID];
 }
 
 - (id)executeSaveChangesRequest:(NSSaveChangesRequest *)saveChangesRequest
