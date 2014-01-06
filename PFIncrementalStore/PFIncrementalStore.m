@@ -316,8 +316,8 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
                           withContext:(NSManagedObjectContext *)context
                                 error:(NSError *__autoreleasing *)error {
     
-    int count = [[self objectResultOfFetchRequest:fetchRequest withContext:context error:error] count];
-    return @[[NSNumber numberWithInt:count]];
+    NSUInteger count = [[self objectResultOfFetchRequest:fetchRequest withContext:context error:error] count];
+    return @[[NSNumber numberWithInteger:count]];
 }
 
 #pragma mark - Save Request methods
