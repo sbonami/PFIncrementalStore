@@ -332,7 +332,7 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
     if (saveCallbacks == nil) {
         saveCallbacks = [NSMutableArray arrayWithArray:callbacks];
     }
-    [[self parseSaveCallbacks] setObject:callbacks forKey:objectID];
+    [[self parseSaveCallbacks] setObject:saveCallbacks forKey:objectID];
 }
 
 - (id)executeSaveChangesRequest:(NSSaveChangesRequest *)saveChangesRequest
