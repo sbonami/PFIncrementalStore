@@ -33,8 +33,6 @@
 {
     [super viewDidLoad];
     
-    [self.tableView registerClass:[UITableViewCell class] forCellReuseIdentifier:@"Cell"];
-    
     AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
     
     NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] initWithEntityName:@"Artist"];
@@ -116,14 +114,19 @@
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
     static NSString *CellIdentifier = @"Cell";
-    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier forIndexPath:indexPath];
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    
+    // If there are no reusable cells; create new one
+    if (cell == nil) {
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:CellIdentifier];
+    }
     
     id <NSFetchedResultsSectionInfo> tableSection = [[self.fetchedResultsController sections] objectAtIndex:indexPath.section];
     Artist *rowArtist = [[tableSection objects] objectAtIndex:indexPath.row];
     
     // Configure the cell...
     [cell.textLabel setText:rowArtist.artistName];
-    [cell.detailTextLabel setText:[NSString stringWithFormat:@"Number of Songs: %i",[rowArtist.artistSongs count]]];
+    [cell.detailTextLabel setText:[NSString stringWithFormat:@"Number of Songs: %lu",(unsigned long)[rowArtist.artistSongs count]]];
     
     return cell;
 }
