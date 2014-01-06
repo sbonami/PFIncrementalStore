@@ -148,11 +148,13 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
                         [blockObject saveInBackground];
                     };
                     
-                    if (![*saveCallbacks objectForKey:relatedManagedObject.objectID]) {
-                        [*saveCallbacks setObject:[NSMutableArray array]
-                                           forKey:relatedManagedObject.objectID];
+                    if (saveCallbacks) {
+                        if (![*saveCallbacks objectForKey:relatedManagedObject.objectID]) {
+                            [*saveCallbacks setObject:[NSMutableArray array]
+                                               forKey:relatedManagedObject.objectID];
+                        }
+                        [[*saveCallbacks objectForKey:relatedManagedObject.objectID] addObject:connectRelationship];
                     }
-                    [[*saveCallbacks objectForKey:relatedManagedObject.objectID] addObject:connectRelationship];
                 }
             }
         }
