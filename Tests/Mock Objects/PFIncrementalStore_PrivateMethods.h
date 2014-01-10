@@ -26,6 +26,23 @@ inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException(NSMana
 
 - (NSManagedObjectContext *)backingManagedObjectContext;
 
+// Save Request Methods
+
+-(void)insertObject:(NSManagedObject *)insertedObject
+        fromRequest:(NSSaveChangesRequest *)request
+          inContext:(NSManagedObjectContext *)context
+              error:(NSError *__autoreleasing *)error;
+
+-(void)updateObject:(NSManagedObject *)insertedObject
+        fromRequest:(NSSaveChangesRequest *)request
+          inContext:(NSManagedObjectContext *)context
+              error:(NSError *__autoreleasing *)error;
+
+-(void)deleteObject:(NSManagedObject *)insertedObject
+        fromRequest:(NSSaveChangesRequest *)request
+          inContext:(NSManagedObjectContext *)context
+              error:(NSError *__autoreleasing *)error;
+
 // Backing Methods
 
 typedef void (^PFInsertUpdateResponseBlock)(NSArray *managedObjects, NSArray *backingObjects);

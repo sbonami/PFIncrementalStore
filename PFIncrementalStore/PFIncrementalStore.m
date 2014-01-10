@@ -232,7 +232,6 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
                             }
                         }];
                         
-                        
                         [self notifyManagedObjectContext:context requestIsCompleted:YES forFetchRequest:fetchRequest fetchedObjectIDs:[managedObjects valueForKeyPath:@"objectID"]];
                     }];
                 }];
@@ -341,154 +340,173 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
                     withContext:(NSManagedObjectContext *)context
                           error:(NSError *__autoreleasing *)error {
     
-    NSManagedObjectContext *backingContext = [self backingManagedObjectContext];
-    
     // NSManagedObjectContext removes object references from an NSSaveChangesRequest as each object is saved, so create a copy of the original in order to send useful information in AFIncrementalStoreContextDidSaveRemoteValues notification.
     NSSaveChangesRequest *saveChangesRequestCopy = [[NSSaveChangesRequest alloc] initWithInsertedObjects:[saveChangesRequest.insertedObjects copy] updatedObjects:[saveChangesRequest.updatedObjects copy] deletedObjects:[saveChangesRequest.deletedObjects copy] lockedObjects:[saveChangesRequest.lockedObjects copy]];
     
-    
     for (NSManagedObject *insertedObject in [saveChangesRequest insertedObjects]) {
-        PFObject *object = [PFObject objectWithClassName:insertedObject.entity.name];
-        
-        __block NSMutableDictionary *saveCallbacks = [NSMutableDictionary dictionary];
-        [object setValuesFromManagedObject:insertedObject withSaveCallbacks:&saveCallbacks];
-        for (NSManagedObjectID *relatedObjectID in saveCallbacks) {
-            [self addParseSaveCallbacks:[saveCallbacks objectForKey:relatedObjectID] forObject:relatedObjectID];
+        if (insertedObject.pf_resourceIdentifier) {
+            [self updateObject:insertedObject fromRequest:saveChangesRequestCopy inContext:context error:error];
+        } else {
+            [self insertObject:insertedObject fromRequest:saveChangesRequestCopy inContext:context error:error];
         }
-        
-        [object saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
-            if (succeeded) {
-                NSLog(@"Insert %@ %@",object, object.objectId);
-                
-                NSManagedObjectID *backingObjectID = [self managedObjectIDForBackingObjectForEntity:[insertedObject entity] withParseObjectId:object.objectId];
-                insertedObject.pf_resourceIdentifier = object.objectId;
-                [insertedObject setValuesFromParseObject:object];
-                
-                [backingContext performBlockAndWait:^{
-                    __block NSManagedObject *backingObject = nil;
-                    if (backingObjectID) {
-                        [backingContext performBlockAndWait:^{
-                            backingObject = [backingContext existingObjectWithID:backingObjectID error:nil];
-                        }];
-                    }
-                    
-                    if (!backingObject) {
-                        backingObject = [NSEntityDescription insertNewObjectForEntityForName:insertedObject.entity.name inManagedObjectContext:backingContext];
-                        [backingObject.managedObjectContext obtainPermanentIDsForObjects:[NSArray arrayWithObject:backingObject] error:nil];
-                    }
-                    
-                    [backingObject setValue:object.objectId forKey:kPFIncrementalStoreResourceIdentifierAttributeName];
-                    [self updateBackingObject:backingObject withAttributeAndRelationshipValuesFromManagedObject:insertedObject];
-                    [backingContext save:nil];
-                }];
-                
-                [self performSaveCallbacksWithParseObject:object andManagedObjectID:insertedObject.objectID];
-                
-                [insertedObject willChangeValueForKey:@"objectID"];
-                [context obtainPermanentIDsForObjects:[NSArray arrayWithObject:insertedObject] error:nil];
-                [insertedObject didChangeValueForKey:@"objectID"];
-                
-                [context refreshObject:insertedObject mergeChanges:NO];
-            } else {
-                NSLog(@"Insert Error: %@", error);
-                
-                // Reset destination objects to prevent dangling relationships
-                for (NSRelationshipDescription *relationship in [insertedObject.entity.relationshipsByName allValues]) {
-                    if (!relationship.inverseRelationship) {
-                        continue;
-                    }
-                    
-                    id <NSFastEnumeration> destinationObjects = nil;
-                    if ([relationship isToMany]) {
-                        destinationObjects = [insertedObject valueForKey:relationship.name];
-                    } else {
-                        NSManagedObject *destinationObject = [insertedObject valueForKey:relationship.name];
-                        if (destinationObject) {
-                            destinationObjects = [NSArray arrayWithObject:destinationObject];
-                        }
-                    }
-                    
-                    for (NSManagedObject *destinationObject in destinationObjects) {
-                        [context refreshObject:destinationObject mergeChanges:NO];
-                    }
-                }
-            }
-            
-            [self notifyManagedObjectContext:context requestIsCompleted:YES forSaveChangesRequest:saveChangesRequestCopy changedObjectIDs:@[insertedObject.objectID]];
-        }];
-        
-        [self notifyManagedObjectContext:context requestIsCompleted:NO forSaveChangesRequest:saveChangesRequestCopy changedObjectIDs:@[insertedObject.objectID]];
     }
     
     for (NSManagedObject *updatedObject in [saveChangesRequest updatedObjects]) {
-        NSManagedObjectID *backingObjectID = [self managedObjectIDForBackingObjectForEntity:[updatedObject entity] withParseObjectId:PFResourceIdentifierFromReferenceObject([self referenceObjectForObjectID:updatedObject.objectID])];
-        
-        PFQuery *query = [PFQuery queryWithClassName:updatedObject.entity.name];
-        [query getObjectInBackgroundWithId:updatedObject.pf_resourceIdentifier block:^(PFObject *object, NSError *error) {
-            if (error) {
-                NSLog(@"Fetch Before Update Error: %@",error);
-                
-                [self notifyManagedObjectContext:context requestIsCompleted:YES forSaveChangesRequest:saveChangesRequestCopy changedObjectIDs:@[updatedObject.objectID]];
-            } else {
-                [object setValuesFromManagedObject:updatedObject withSaveCallbacks:nil];
-                [object saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
-                    if (succeeded) {
-                        NSLog(@"Update %@ %@",object, object.objectId);
-                        
-                        [backingContext performBlockAndWait:^{
-                            NSManagedObject *backingObject = [backingContext existingObjectWithID:backingObjectID error:nil];
-                            [self updateBackingObject:backingObject withAttributeAndRelationshipValuesFromManagedObject:updatedObject];
-                            [backingContext save:nil];
-                        }];
-                        
-                        [context refreshObject:updatedObject mergeChanges:YES];
-                    } else {
-                        NSLog(@"Update Error: %@", error);
-                        [context refreshObject:updatedObject mergeChanges:NO];
-                    }
-                    
-                    [self notifyManagedObjectContext:context requestIsCompleted:YES forSaveChangesRequest:saveChangesRequestCopy changedObjectIDs:@[updatedObject.objectID]];
-                }];
-            }
-        }];
-        
-        [self notifyManagedObjectContext:context requestIsCompleted:NO forSaveChangesRequest:saveChangesRequestCopy changedObjectIDs:@[updatedObject.objectID]];
+        [self updateObject:updatedObject fromRequest:saveChangesRequestCopy inContext:context error:error];
     }
     
     for (NSManagedObject *deletedObject in [saveChangesRequest deletedObjects]) {
-        NSManagedObjectID *backingObjectID = [self managedObjectIDForBackingObjectForEntity:[deletedObject entity] withParseObjectId:PFResourceIdentifierFromReferenceObject([self referenceObjectForObjectID:deletedObject.objectID])];
-        
-        PFQuery *query = [PFQuery queryWithClassName:deletedObject.entity.name];
-        [query getObjectInBackgroundWithId:deletedObject.pf_resourceIdentifier block:^(PFObject *object, NSError *error) {
-            if (error) {
-                NSLog(@"Fetch Before Delete Error: %@",error);
-                
-                [self notifyManagedObjectContext:context requestIsCompleted:YES forSaveChangesRequest:saveChangesRequestCopy changedObjectIDs:@[deletedObject.objectID]];
-            } else {
-                [object deleteInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
-                    if (succeeded) {
-                        NSLog(@"Delete %@ %@",object, object.objectId);
-                        
-                        [backingContext performBlockAndWait:^{
-                            NSManagedObject *backingObject = [backingContext existingObjectWithID:backingObjectID error:nil];
-                            if (backingObject) {
-                                [backingContext deleteObject:backingObject];
-                                [backingContext save:nil];
-                            }
-                        }];
-                    } else {
-                        NSLog(@"Delete Error: %@", error);
-                    }
-                    
-                    [self notifyManagedObjectContext:context requestIsCompleted:YES forSaveChangesRequest:saveChangesRequestCopy changedObjectIDs:@[deletedObject.objectID]];
-                }];
-            }
-        }];
-        
-        [self notifyManagedObjectContext:context requestIsCompleted:NO forSaveChangesRequest:saveChangesRequestCopy changedObjectIDs:@[deletedObject.objectID]];
+        [self deleteObject:deletedObject fromRequest:saveChangesRequestCopy inContext:context error:error];
     }
     
     return [NSArray array];
+}
+
+-(void)insertObject:(NSManagedObject *)insertedObject fromRequest:(NSSaveChangesRequest *)request inContext:(NSManagedObjectContext *)context error:(NSError *__autoreleasing *)error {
+    NSManagedObjectContext *backingContext = [self backingManagedObjectContext];
+    
+    PFObject *object = [PFObject objectWithClassName:insertedObject.entity.name];
+    
+    __block NSMutableDictionary *saveCallbacks = [NSMutableDictionary dictionary];
+    [object setValuesFromManagedObject:insertedObject withSaveCallbacks:&saveCallbacks];
+    for (NSManagedObjectID *relatedObjectID in saveCallbacks) {
+        [self addParseSaveCallbacks:[saveCallbacks objectForKey:relatedObjectID] forObject:relatedObjectID];
+    }
+    
+    [object saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
+        if (succeeded) {
+            NSLog(@"Insert %@ %@",object, object.objectId);
+            
+            NSManagedObjectID *backingObjectID = [self managedObjectIDForBackingObjectForEntity:[insertedObject entity] withParseObjectId:object.objectId];
+            insertedObject.pf_resourceIdentifier = object.objectId;
+            [insertedObject setValuesFromParseObject:object];
+            
+            [backingContext performBlockAndWait:^{
+                __block NSManagedObject *backingObject = nil;
+                if (backingObjectID) {
+                    [backingContext performBlockAndWait:^{
+                        backingObject = [backingContext existingObjectWithID:backingObjectID error:nil];
+                    }];
+                }
+                
+                if (!backingObject) {
+                    backingObject = [NSEntityDescription insertNewObjectForEntityForName:insertedObject.entity.name inManagedObjectContext:backingContext];
+                    [backingObject.managedObjectContext obtainPermanentIDsForObjects:[NSArray arrayWithObject:backingObject] error:nil];
+                }
+                
+                [backingObject setValue:object.objectId forKey:kPFIncrementalStoreResourceIdentifierAttributeName];
+                [self updateBackingObject:backingObject withAttributeAndRelationshipValuesFromManagedObject:insertedObject];
+                [backingContext save:nil];
+            }];
+            
+            [self performSaveCallbacksWithParseObject:object andManagedObjectID:insertedObject.objectID];
+            
+            [insertedObject willChangeValueForKey:@"objectID"];
+            [context obtainPermanentIDsForObjects:[NSArray arrayWithObject:insertedObject] error:nil];
+            [insertedObject didChangeValueForKey:@"objectID"];
+            
+            [context refreshObject:insertedObject mergeChanges:NO];
+        } else {
+            NSLog(@"Insert Error: %@", error);
+            
+            // Reset destination objects to prevent dangling relationships
+            for (NSRelationshipDescription *relationship in [insertedObject.entity.relationshipsByName allValues]) {
+                if (!relationship.inverseRelationship) {
+                    continue;
+                }
+                
+                id <NSFastEnumeration> destinationObjects = nil;
+                if ([relationship isToMany]) {
+                    destinationObjects = [insertedObject valueForKey:relationship.name];
+                } else {
+                    NSManagedObject *destinationObject = [insertedObject valueForKey:relationship.name];
+                    if (destinationObject) {
+                        destinationObjects = [NSArray arrayWithObject:destinationObject];
+                    }
+                }
+                
+                for (NSManagedObject *destinationObject in destinationObjects) {
+                    [context refreshObject:destinationObject mergeChanges:NO];
+                }
+            }
+        }
+        
+        [self notifyManagedObjectContext:context requestIsCompleted:YES forSaveChangesRequest:request changedObjectIDs:@[insertedObject.objectID]];
+    }];
+    
+    [self notifyManagedObjectContext:context requestIsCompleted:NO forSaveChangesRequest:request changedObjectIDs:@[insertedObject.objectID]];
+}
+
+-(void)updateObject:(NSManagedObject *)updatedObject fromRequest:(NSSaveChangesRequest *)request inContext:(NSManagedObjectContext *)context error:(NSError *__autoreleasing *)error {
+    NSManagedObjectContext *backingContext = [self backingManagedObjectContext];
+    
+    NSManagedObjectID *backingObjectID = [self managedObjectIDForBackingObjectForEntity:[updatedObject entity] withParseObjectId:PFResourceIdentifierFromReferenceObject([self referenceObjectForObjectID:updatedObject.objectID])];
+    
+    PFQuery *query = [PFQuery queryWithClassName:updatedObject.entity.name];
+    [query getObjectInBackgroundWithId:updatedObject.pf_resourceIdentifier block:^(PFObject *object, NSError *error) {
+        if (error) {
+            NSLog(@"Fetch Before Update Error: %@",error);
+            
+            [self notifyManagedObjectContext:context requestIsCompleted:YES forSaveChangesRequest:request changedObjectIDs:@[updatedObject.objectID]];
+        } else {
+            [object setValuesFromManagedObject:updatedObject withSaveCallbacks:nil];
+            [object saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
+                if (succeeded) {
+                    NSLog(@"Update %@ %@",object, object.objectId);
+                    
+                    [backingContext performBlockAndWait:^{
+                        NSManagedObject *backingObject = [backingContext existingObjectWithID:backingObjectID error:nil];
+                        [self updateBackingObject:backingObject withAttributeAndRelationshipValuesFromManagedObject:updatedObject];
+                        [backingContext save:nil];
+                    }];
+                    
+                    [context refreshObject:updatedObject mergeChanges:YES];
+                } else {
+                    NSLog(@"Update Error: %@", error);
+                    [context refreshObject:updatedObject mergeChanges:NO];
+                }
+                
+                [self notifyManagedObjectContext:context requestIsCompleted:YES forSaveChangesRequest:request changedObjectIDs:@[updatedObject.objectID]];
+            }];
+        }
+    }];
+    
+    [self notifyManagedObjectContext:context requestIsCompleted:NO forSaveChangesRequest:request changedObjectIDs:@[updatedObject.objectID]];
+}
+
+-(void)deleteObject:(NSManagedObject *)deletedObject fromRequest:(NSSaveChangesRequest *)request inContext:(NSManagedObjectContext *)context error:(NSError *__autoreleasing *)error {
+    NSManagedObjectContext *backingContext = [self backingManagedObjectContext];
+    
+    NSManagedObjectID *backingObjectID = [self managedObjectIDForBackingObjectForEntity:[deletedObject entity] withParseObjectId:PFResourceIdentifierFromReferenceObject([self referenceObjectForObjectID:deletedObject.objectID])];
+    
+    PFQuery *query = [PFQuery queryWithClassName:deletedObject.entity.name];
+    [query getObjectInBackgroundWithId:deletedObject.pf_resourceIdentifier block:^(PFObject *object, NSError *error) {
+        if (error) {
+            NSLog(@"Fetch Before Delete Error: %@",error);
+            
+            [self notifyManagedObjectContext:context requestIsCompleted:YES forSaveChangesRequest:request changedObjectIDs:@[deletedObject.objectID]];
+        } else {
+            [object deleteInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
+                if (succeeded) {
+                    NSLog(@"Delete %@ %@",object, object.objectId);
+                    
+                    [backingContext performBlockAndWait:^{
+                        NSManagedObject *backingObject = [backingContext existingObjectWithID:backingObjectID error:nil];
+                        if (backingObject) {
+                            [backingContext deleteObject:backingObject];
+                            [backingContext save:nil];
+                        }
+                    }];
+                } else {
+                    NSLog(@"Delete Error: %@", error);
+                }
+                
+                [self notifyManagedObjectContext:context requestIsCompleted:YES forSaveChangesRequest:request changedObjectIDs:@[deletedObject.objectID]];
+            }];
+        }
+    }];
+    
+    [self notifyManagedObjectContext:context requestIsCompleted:NO forSaveChangesRequest:request changedObjectIDs:@[deletedObject.objectID]];
 }
 
 -(void)performSaveCallbacksWithParseObject:(PFObject *)parseObject andManagedObjectID:(NSManagedObjectID *)managedObjectID {
