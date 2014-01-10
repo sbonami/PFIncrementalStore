@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name         = "PFIncrementalStore"
-  s.version      = "0.0.2"
+  s.version      = "0.0.3"
   s.summary      = "Core Data Persistence with Parse, an NSIncrementalStore subclass."
   s.homepage     = "https://github.com/sbonami/PFIncrementalStore"
   s.license      = 'MIT'
@@ -8,7 +8,7 @@ Pod::Spec.new do |s|
 
   s.ios.deployment_target = '5.0'
 
-  s.source       = { :git => "https://github.com/sbonami/PFIncrementalStore.git", :tag => "0.0.2" }
+  s.source       = { :git => "https://github.com/sbonami/PFIncrementalStore.git", :tag => "0.0.3" }
   s.source_files = 'PFIncrementalStore', 'PFIncrementalStore/**/*.{h,m}'
   s.public_header_files = 'PFIncrementalStore/**/*.h'
 
