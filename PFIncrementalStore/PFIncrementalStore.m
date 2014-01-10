@@ -471,8 +471,10 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
                         
                         [backingContext performBlockAndWait:^{
                             NSManagedObject *backingObject = [backingContext existingObjectWithID:backingObjectID error:nil];
-                            [backingContext deleteObject:backingObject];
-                            [backingContext save:nil];
+                            if (backingObject) {
+                                [backingContext deleteObject:backingObject];
+                                [backingContext save:nil];
+                            }
                         }];
                     } else {
                         NSLog(@"Delete Error: %@", error);
