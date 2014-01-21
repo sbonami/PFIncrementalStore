@@ -128,6 +128,8 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
         id value = [managedObject valueForKey:attributeName];
         if (value) {
             [self setObject:value forKey:attributeName];
+        } else {
+            [self removeObjectForKey:attributeName];
         }
     }
     
@@ -157,6 +159,12 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
                     }
                 }
             }
+        } else {
+            // No value, need to unset the relationship value
+            if (!relationship.isToMany) {
+                [self removeObjectForKey:relationshipName];
+            }
+            
         }
     }
 }
