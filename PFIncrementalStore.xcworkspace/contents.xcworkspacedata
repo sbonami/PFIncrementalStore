@@ -25,6 +25,12 @@
          <FileRef
             location = "group:PFIncrementalStore/PFReservedObject.m">
          </FileRef>
+         <FileRef
+            location = "group:PFIncrementalStore/PFProxyUser.h">
+         </FileRef>
+         <FileRef
+            location = "group:PFIncrementalStore/PFProxyUser.m">
+         </FileRef>
       </Group>
    </Group>
    <FileRef
