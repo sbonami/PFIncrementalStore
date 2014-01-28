@@ -21,6 +21,7 @@
 // THE SOFTWARE.
 
 #import <CoreData/CoreData.h>
+#import "NSManagedObject_PFIncrementalStore.h"
 
 @interface PFIncrementalStore : NSIncrementalStore
 

@@ -1,4 +1,3 @@
-
 // PFIncrementalStore.m
 //
 // Copyright (c) 2013 Scott BonAmi
@@ -51,9 +50,9 @@ typedef void (^PFInsertUpdateResponseBlock)(NSArray *managedObjects, NSArray *ba
 
 static char kPFResourceIdentifierObjectKey;
 
-static NSString * const kPFReferenceObjectPrefix = @"__pf_";
-static NSString * const kPFIncrementalStoreLastModifiedAttributeName = @"__pf_lastModified";
-static NSString * const kPFIncrementalStoreResourceIdentifierAttributeName = @"__pf_resourceIdentifier";
+NSString * const kPFReferenceObjectPrefix = @"__pf_";
+NSString * const kPFIncrementalStoreLastModifiedAttributeName = @"__pf_lastModified";
+NSString * const kPFIncrementalStoreResourceIdentifierAttributeName = @"__pf_resourceIdentifier";
 
 inline NSString * PFReferenceObjectFromResourceIdentifier(NSString *resourceIdentifier) {
     if (!resourceIdentifier) {
@@ -78,10 +77,6 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
         @throw [NSException exceptionWithName:NSInternalInconsistencyException reason:[error localizedFailureReason] userInfo:[NSDictionary dictionaryWithObject:error forKey:NSUnderlyingErrorKey]];
     }
 }
-
-@interface NSManagedObject (_PFIncrementalStore)
-@property (readwrite, nonatomic, copy, setter = pf_setResourceIdentifier:) NSString *pf_resourceIdentifier;
-@end
 
 @implementation NSManagedObject (_PFIncrementalStore)
 @dynamic pf_resourceIdentifier;
@@ -1022,8 +1017,6 @@ withAttributeAndRelationshipValuesFromManagedObject:(NSManagedObject *)managedOb
     
     return values;
 }
-
-
 
 #pragma mark - Notification Methods
 
