@@ -157,6 +157,11 @@ extern NSString * const PFIncrementalStoreContextDidFetchNewValuesForRelationshi
 //------------------------------------------------------------------------------
 
 /**
+ A key in the `userInfo` dictionary in an `NSManagedObject` corresponding to the Parse Class Name with which the entity should synchronize.
+ */
+extern NSString * const PFIncrementalStoreManagedObjectEntityParseClassName;
+
+/**
  A key in the `userInfo` dictionary in a `PFIncrementalStoreContextWillFetchRemoteValues` or `PFIncrementalStoreContextDidFetchRemoteValues` as well as `PFIncrementalStoreContextWillSaveRemoteValues` or `PFIncrementalStoreContextDidSaveRemoteValues` notifications.
  The corresponding value is an `NSArray` of `AFHTTPRequestOperation` objects corresponding to the request operations triggered by the fetch or save changes request.
  */

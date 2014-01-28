@@ -30,4 +30,7 @@ extern NSString * const kPFIncrementalStoreResourceIdentifierAttributeName;
 
 @property (readwrite, nonatomic, copy, setter = pf_setResourceIdentifier:) NSString *pf_resourceIdentifier;
 
+-(NSString *)parseClassName;
+-(NSString *)parseQueryClassName;
+
 @end
