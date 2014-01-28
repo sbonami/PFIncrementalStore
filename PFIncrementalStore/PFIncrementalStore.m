@@ -191,7 +191,8 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
 
 - (id)relatedObjectsForRelationship:(NSRelationshipDescription *)relationship {
     id relatedObjects = nil;
-    if (relationship.isToMany) {
+    
+    if (relationship.isToMany && !relationship.inverseRelationship.isToMany) {
         PFQuery *query = [PFQuery queryWithClassName:relationship.destinationEntity.parseQueryClassName];
         [query whereKey:relationship.inverseRelationship.name equalTo:self];
         relatedObjects = [query findObjects];
@@ -231,8 +232,6 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
 - (id)executeFetchRequest:(NSFetchRequest *)fetchRequest
               withContext:(NSManagedObjectContext *)context
                     error:(NSError *__autoreleasing *)error {
-    
-    NSLog(@"%@",fetchRequest.entity.parseQueryClassName);
     
     PFQuery *query = [PFQuery queryWithClassName:fetchRequest.entity.parseQueryClassName predicate:fetchRequest.predicate];
     [query findObjectsInBackgroundWithBlock:^(NSArray *objects, NSError *error) {
