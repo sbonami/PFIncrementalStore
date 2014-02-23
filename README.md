@@ -2,7 +2,8 @@ PFIncrementalStore
 ==================
 
 [![Build Status](https://travis-ci.org/sbonami/PFIncrementalStore.png?branch=master)](https://travis-ci.org/sbonami/PFIncrementalStore)
-[![Stories in Ready](https://badge.waffle.io/sbonami/PFIncrementalStore.png?label=ready)](https://waffle.io/sbonami/PFIncrementalStore)  
+[![Stories in Ready](https://badge.waffle.io/sbonami/PFIncrementalStore.png?label=ready)](https://waffle.io/sbonami/PFIncrementalStore)
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/sbonami/pfincrementalstore/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
 
 An NSIncrementalStore subclass for Parse
 
