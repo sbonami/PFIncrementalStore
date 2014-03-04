@@ -13,10 +13,6 @@
 static NSString * const kPFIncrementalStoreErrorDomain = @"PFIncrementalStoreErrorDomain";
 static NSString * const kPFIncrementalStoreUnimplementedMethodException = @"PFIncrementalStoreUnimplementedMethodException";
 
-static NSString * const kPFReferenceObjectPrefix = @"__pf_";
-static NSString * const kPFIncrementalStoreLastModifiedAttributeName = @"__pf_lastModified";
-static NSString * const kPFIncrementalStoreResourceIdentifierAttributeName = @"__pf_resourceIdentifier";
-
 inline NSString * PFReferenceObjectFromResourceIdentifier(NSString *resourceIdentifier);
 inline NSString * PFResourceIdentifierFromReferenceObject(id referenceObject);
 

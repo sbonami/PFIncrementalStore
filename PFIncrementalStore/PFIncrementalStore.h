@@ -21,6 +21,7 @@
 // THE SOFTWARE.
 
 #import <CoreData/CoreData.h>
+#import "NSManagedObject_PFIncrementalStore.h"
 
 @interface PFIncrementalStore : NSIncrementalStore
 
@@ -154,6 +155,11 @@ extern NSString * const PFIncrementalStoreContextWillFetchNewValuesForRelationsh
 extern NSString * const PFIncrementalStoreContextDidFetchNewValuesForRelationship;
 
 //------------------------------------------------------------------------------
+
+/**
+ A key in the `userInfo` dictionary in an `NSManagedObject` corresponding to the Parse Class Name with which the entity should synchronize.
+ */
+extern NSString * const PFIncrementalStoreManagedObjectEntityParseClassName;
 
 /**
  A key in the `userInfo` dictionary in a `PFIncrementalStoreContextWillFetchRemoteValues` or `PFIncrementalStoreContextDidFetchRemoteValues` as well as `PFIncrementalStoreContextWillSaveRemoteValues` or `PFIncrementalStoreContextDidSaveRemoteValues` notifications.
