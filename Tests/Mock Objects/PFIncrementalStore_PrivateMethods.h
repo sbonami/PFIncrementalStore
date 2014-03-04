@@ -84,6 +84,14 @@ withAttributeAndRelationshipValuesFromManagedObject:(NSManagedObject *)managedOb
 
 - (void)setValuesFromParseObject:(PFObject *)parseObject;
 
+- (void)setPFFile:(PFFile *)file forKey:(NSString *)key;
+
+@end
+
+@interface NSMutableDictionary (_PFIncrementalStore)
+
+- (void)setPFFile:(PFFile *)file forKey:(NSString *)key;
+
 @end
 
 @interface PFObject (_PFIncrementalStore)
