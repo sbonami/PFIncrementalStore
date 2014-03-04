@@ -130,8 +130,25 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
     [mutableAttributeValues removeObjectForKey:kPFIncrementalStoreResourceIdentifierAttributeName];
     [mutableAttributeValues removeObjectForKey:kPFIncrementalStoreLastModifiedAttributeName];
     for (NSString *attributeName in mutableAttributeValues) {
-        [self setValue:[parseObject objectForKey:attributeName] forKey:attributeName];
+        id parseValue = [parseObject objectForKey:attributeName];
+        if ([parseValue isKindOfClass:[PFFile class]]) {
+            [self setPFFile:parseValue forKey:attributeName];
+        } else {
+            [self setValue:parseValue forKey:attributeName];
+        }
     }
+}
+
+- (void)setPFFile:(PFFile *)file forKey:(NSString *)key {
+    [self setValue:[file getData] forKey:key];
+}
+
+@end
+
+@implementation NSMutableDictionary (_PFIncrementalStore)
+
+- (void)setPFFile:(PFFile *)file forKey:(NSString *)key {
+    [self setObject:[file getData] forKey:key];
 }
 
 @end
@@ -648,7 +665,12 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
                     [mutableAttributeValues removeObjectForKey:kPFIncrementalStoreResourceIdentifierAttributeName];
                     [mutableAttributeValues removeObjectForKey:kPFIncrementalStoreLastModifiedAttributeName];
                     for (NSString *attributeName in fetchRequest.entity.attributesByName) {
-                        [mutableAttributeValues setObject:[object objectForKey:attributeName] forKey:attributeName];
+                        id parseValue = [object objectForKey:attributeName];
+                        if ([parseValue isKindOfClass:[PFFile class]]) {
+                            [mutableAttributeValues setPFFile:parseValue forKey:attributeName];
+                        } else {
+                            [mutableAttributeValues setObject:parseValue forKey:attributeName];
+                        }
                     }
                     
                     [managedObject setValuesForKeysWithDictionary:mutableAttributeValues];
