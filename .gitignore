@@ -21,3 +21,4 @@ DerivedData
 Pods
 Tests/Podfile.lock
 Tests/PFIncrementalStore Tests.xcodeproj/xcshareddata/xcschemes/
+*.lock
