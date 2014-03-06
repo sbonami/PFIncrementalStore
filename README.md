@@ -101,3 +101,14 @@ official Parse web site is available at [www.parse.com](https://www.parse.com).
 
 PFIncrementalStore is available under the MIT license.
 See the LICENSE file for more info.
+
+## Contributing
+
+1. Fork repository on GitHub.
+1. Create a feature branch (should indicate intention `add_feature_x` or issue `##_issue_name`).
+1. Make changes.
+1. Test changes.
+1. Ensure all tests pass.
+1. Submit pull request using GitHub.
+
+Do not modify `PFIncrementalStore.podspec`, the maintainers will handle those changes.
