@@ -112,6 +112,9 @@ dependency, Parse:</p>
 <span class="k">@end</span>
 </pre></div>
 
+<h3>
+<a name="utilize-the-subclass-in-your-persistent-store-coordinator" class="anchor" href="#utilize-the-subclass-in-your-persistent-store-coordinator"><span class="octicon octicon-link"></span></a>Utilize the Subclass in your Persistent Store Coordinator</h3>
+
 <div class="highlight highlight-objective-c"><pre><span class="k">-</span> <span class="p">(</span><span class="n">NSPersistentStoreCoordinator</span> <span class="o">*</span><span class="p">)</span><span class="nf">persistentStoreCoordinator</span> <span class="p">{</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">__persistentStoreCoordinator</span> <span class="o">==</span> <span class="nb">nil</span><span class="p">)</span> <span class="p">{</span>
         <span class="n">NSURL</span> <span class="o">*</span><span class="n">storeURL</span> <span class="o">=</span> <span class="p">[[</span><span class="n">self</span> <span class="n">applicationDocumentsDirectory</span><span class="p">]</span> <span class="n">URLByAppendingPathComponent</span><span class="o">:</span><span class="p">[</span><span class="n">NSString</span> <span class="n">stringWithFormat</span><span class="o">:</span><span class="s">@"%@.sqlite"</span><span class="p">,[</span><span class="n">self</span> <span class="n">coreDataStack</span><span class="p">]]];</span>
@@ -135,6 +138,13 @@ dependency, Parse:</p>
     <span class="p">}</span>
     <span class="k">return</span> <span class="n">__persistentStoreCoordinator</span><span class="p">;</span>
 <span class="p">}</span>
+</pre></div>
+
+<h3>
+<a name="make-sure-to-initialize-parse-with-your-keys-possibly-in-your-appdelegate" class="anchor" href="#make-sure-to-initialize-parse-with-your-keys-possibly-in-your-appdelegate"><span class="octicon octicon-link"></span></a>Make sure to initialize Parse with your Keys, possibly in your AppDelegate</h3>
+
+<div class="highlight highlight-objective-c"><pre><span class="p">[</span><span class="n">Parse</span> <span class="n">setApplicationId</span><span class="o">:&lt;</span><span class="err">#</span> <span class="n">Parse</span> <span class="n">Application</span> <span class="n">ID</span> <span class="err">#</span><span class="o">&gt;</span>
+              <span class="nl">clientKey:</span><span class="o">&lt;</span><span class="err">#</span> <span class="n">Parse</span> <span class="n">Client</span> <span class="n">Key</span> <span class="err">#</span><span class="o">&gt;</span><span class="p">];</span>
 </pre></div>
 
 <h2>
