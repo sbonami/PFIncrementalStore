@@ -28,37 +28,128 @@
     <div id="content-wrapper">
       <div class="inner clearfix">
         <section id="main-content">
-          <h3>
-<a name="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages"><span class="octicon octicon-link"></span></a>Welcome to GitHub Pages.</h3>
+          <h2>
+<a name="welcome-to-pfincrementalstore" class="anchor" href="#welcome-to-pfincrementalstore"><span class="octicon octicon-link"></span></a>Welcome to PFIncrementalStore</h2>
 
-<p>This automatic page generator is the easiest way to create beautiful pages for all of your projects. Author your page content here using GitHub Flavored Markdown, select a template crafted by a designer, and publish. After your page is generated, you can check out the new branch:</p>
+<p>This drop-in class manages persistence syncing between Core Data and Parse seamlessly. PFIncrementalStore is an
+<a href="http://nshipster.com/nsincrementalstore/"><code>NSIncrementalStore</code></a>
+subclass that uses
+<a href="https://www.parse.com">Parse</a> to
+automatically request resources as properties and relationships are
+needed.</p>
 
-<pre><code>$ cd your_repo_root/repo_name
-$ git fetch origin
-$ git checkout gh-pages
-</code></pre>
-
-<p>If you're using the GitHub for Mac, simply sync your repository and you'll see the new branch.</p>
-
-<h3>
-<a name="designer-templates" class="anchor" href="#designer-templates"><span class="octicon octicon-link"></span></a>Designer Templates</h3>
-
-<p>We've crafted some handsome templates for you to use. Go ahead and continue to layouts to browse through them. You can easily go back to edit your page before publishing. After publishing your page, you can revisit the page generator and switch to another theme. Your Page content will be preserved if it remained markdown format.</p>
+<h2>
+<a name="installation" class="anchor" href="#installation"><span class="octicon octicon-link"></span></a>Installation</h2>
 
 <h3>
-<a name="rather-drive-stick" class="anchor" href="#rather-drive-stick"><span class="octicon octicon-link"></span></a>Rather Drive Stick?</h3>
+<a name="requirements" class="anchor" href="#requirements"><span class="octicon octicon-link"></span></a>Requirements</h3>
 
-<p>If you prefer to not use the automatic generator, push a branch named <code>gh-pages</code> to your repository to create a page manually. In addition to supporting regular HTML content, GitHub Pages support Jekyll, a simple, blog aware static site generator written by our own Tom Preston-Werner. Jekyll makes it easy to create site-wide headers and footers without having to copy them across every page. It also offers intelligent blog support and other advanced templating features.</p>
+<p>PFIncrementalStore requires a subscription to Parse, a valid Parse App, API
+Key and Secret, and minor programming knowledge. Parse subscription and
+API information can be obtained at
+<a href="https://www.parse.com/">https://www.parse.com/</a></p>
+
+<p>PFIncrementalStore requires Xcode 4.4 with the <a href="http://developer.apple.com/library/ios/#releasenotes/General/WhatsNewIniPhoneOS/Articles/iOS5.html">iOS
+5.0</a>
+SDK, as well as <a href="https://www.parse.com/downloads/ios/parse-library/latest">Parse</a> 1.2 or
+higher.</p>
 
 <h3>
-<a name="authors-and-contributors" class="anchor" href="#authors-and-contributors"><span class="octicon octicon-link"></span></a>Authors and Contributors</h3>
+<a name="cocoapods" class="anchor" href="#cocoapods"><span class="octicon octicon-link"></span></a>Cocoapods</h3>
 
-<p>You can <a href="https://github.com/blog/821" class="user-mention">@mention</a> a GitHub username to generate a link to their profile. The resulting <code>&lt;a&gt;</code> element will link to the contributor's GitHub Profile. For example: In 2007, Chris Wanstrath (<a href="https://github.com/defunkt" class="user-mention">@defunkt</a>), PJ Hyett (<a href="https://github.com/pjhyett" class="user-mention">@pjhyett</a>), and Tom Preston-Werner (<a href="https://github.com/mojombo" class="user-mention">@mojombo</a>) founded GitHub.</p>
+<p><a href="http://cocoapods.org">CocoaPods</a> is the recommended way to add
+PFIncrementalStore to your project.</p>
+
+<p>Here's an example podfile that installs PFIncrementalStore and its
+dependency, Parse:</p>
 
 <h3>
-<a name="support-or-contact" class="anchor" href="#support-or-contact"><span class="octicon octicon-link"></span></a>Support or Contact</h3>
+<a name="podfile" class="anchor" href="#podfile"><span class="octicon octicon-link"></span></a>Podfile</h3>
 
-<p>Having trouble with Pages? Check out the documentation at <a href="http://help.github.com/pages">http://help.github.com/pages</a> or contact <a href="mailto:support@github.com">support@github.com</a> and we’ll help you sort it out.</p>
+<div class="highlight highlight-ruby"><pre><span class="n">platform</span> <span class="ss">:ios</span><span class="p">,</span> <span class="s1">'5.0'</span>
+
+<span class="n">pod</span> <span class="s1">'PFIncrementalStore'</span>
+</pre></div>
+
+<p>Note the specification of iOS 5.0 as the platform; leaving out the 5.0 will cause CocoaPods to fail with the following message:</p>
+
+<blockquote>
+<p>[!] PFIncrementalStore is not compatible with iOS 4.3.</p>
+</blockquote>
+
+<h3>
+<a name="create-a-pfincrementalstore-subclass" class="anchor" href="#create-a-pfincrementalstore-subclass"><span class="octicon octicon-link"></span></a>Create a PFIncrementalStore Subclass</h3>
+
+<div class="highlight highlight-objective-c"><pre><span class="cp">#import &lt;PFIncrementalStore/PFIncrementalStore.h&gt;</span>
+
+<span class="k">@interface</span> <span class="nc">IncrementalStore</span> : <span class="nc">PFIncrementalStore</span>
+
+<span class="k">+</span> <span class="p">(</span><span class="n">NSURL</span> <span class="o">*</span><span class="p">)</span><span class="nf">modelURL</span><span class="p">;</span>
+
+<span class="k">@end</span>
+</pre></div>
+
+<div class="highlight highlight-objective-c"><pre><span class="cp">#import "IncrementalStore.h"</span>
+
+<span class="k">@implementation</span> <span class="nc">IncrementalStore</span>
+
+<span class="k">+</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">initialize</span> <span class="p">{</span>
+    <span class="p">[</span><span class="n">NSPersistentStoreCoordinator</span> <span class="n">registerStoreClass</span><span class="o">:</span><span class="n">self</span> <span class="n">forStoreType</span><span class="o">:</span><span class="p">[</span><span class="n">self</span> <span class="n">type</span><span class="p">]];</span>
+<span class="p">}</span>
+
+<span class="k">+</span> <span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nf">type</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">NSStringFromClass</span><span class="p">(</span><span class="n">self</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="k">+</span> <span class="p">(</span><span class="n">NSURL</span> <span class="o">*</span><span class="p">)</span><span class="nf">modelURL</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">[[</span><span class="n">NSBundle</span> <span class="n">mainBundle</span><span class="p">]</span> <span class="n">URLForResource</span><span class="o">:</span><span class="s">@"CoreDataModel"</span> <span class="n">withExtension</span><span class="o">:</span><span class="s">@"momd"</span><span class="p">];</span>
+<span class="p">}</span>
+
+<span class="k">+</span> <span class="p">(</span><span class="n">NSManagedObjectModel</span> <span class="o">*</span><span class="p">)</span><span class="nf">model</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">[[</span><span class="n">NSManagedObjectModel</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">initWithContentsOfURL</span><span class="o">:</span><span class="p">[</span><span class="n">self</span> <span class="n">modelURL</span><span class="p">]];</span>
+<span class="p">}</span>
+
+<span class="k">@end</span>
+</pre></div>
+
+<div class="highlight highlight-objective-c"><pre><span class="k">-</span> <span class="p">(</span><span class="n">NSPersistentStoreCoordinator</span> <span class="o">*</span><span class="p">)</span><span class="nf">persistentStoreCoordinator</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">__persistentStoreCoordinator</span> <span class="o">==</span> <span class="nb">nil</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">NSURL</span> <span class="o">*</span><span class="n">storeURL</span> <span class="o">=</span> <span class="p">[[</span><span class="n">self</span> <span class="n">applicationDocumentsDirectory</span><span class="p">]</span> <span class="n">URLByAppendingPathComponent</span><span class="o">:</span><span class="p">[</span><span class="n">NSString</span> <span class="n">stringWithFormat</span><span class="o">:</span><span class="s">@"%@.sqlite"</span><span class="p">,[</span><span class="n">self</span> <span class="n">coreDataStack</span><span class="p">]]];</span>
+
+        <span class="n">NSError</span> <span class="o">*</span><span class="n">error</span> <span class="o">=</span> <span class="nb">nil</span><span class="p">;</span>
+        <span class="n">__persistentStoreCoordinator</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSPersistentStoreCoordinator</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">initWithManagedObjectModel</span><span class="o">:</span><span class="p">[</span><span class="n">IncrementalStore</span> <span class="n">model</span><span class="p">]];</span>
+
+        <span class="n">IncrementalStore</span> <span class="o">*</span><span class="n">incrementalStore</span> <span class="o">=</span> <span class="p">(</span><span class="n">IncrementalStore</span> <span class="o">*</span><span class="p">)[</span><span class="n">__persistentStoreCoordinator</span> <span class="n">addPersistentStoreWithType</span><span class="o">:</span><span class="p">[</span><span class="n">IncrementalStore</span> <span class="n">type</span><span class="p">]</span>
+                                                                                                                <span class="nl">configuration:</span><span class="nb">nil</span> <span class="n">URL</span><span class="o">:</span><span class="nb">nil</span> <span class="n">options</span><span class="o">:</span><span class="nb">nil</span> <span class="n">error</span><span class="o">:</span><span class="nb">nil</span><span class="p">];</span>
+
+        <span class="n">NSDictionary</span> <span class="o">*</span><span class="n">options</span> <span class="o">=</span> <span class="p">@{</span>
+                                  <span class="n">NSInferMappingModelAutomaticallyOption</span> <span class="o">:</span> <span class="p">@(</span><span class="nb">YES</span><span class="p">),</span>
+                                  <span class="nl">NSMigratePersistentStoresAutomaticallyOption:</span> <span class="p">@(</span><span class="nb">YES</span><span class="p">)</span>
+                                  <span class="p">};</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="p">[</span><span class="n">incrementalStore</span><span class="p">.</span><span class="n">backingPersistentStoreCoordinator</span> <span class="n">addPersistentStoreWithType</span><span class="o">:</span><span class="n">NSSQLiteStoreType</span> <span class="n">configuration</span><span class="o">:</span><span class="nb">nil</span> <span class="n">URL</span><span class="o">:</span><span class="n">storeURL</span> <span class="n">options</span><span class="o">:</span><span class="n">options</span> <span class="n">error</span><span class="o">:&amp;</span><span class="n">error</span><span class="p">])</span> <span class="p">{</span>
+            <span class="n">NSLog</span><span class="p">(</span><span class="s">@"Unresolved error %@, %@"</span><span class="p">,</span> <span class="n">error</span><span class="p">,</span> <span class="p">[</span><span class="n">error</span> <span class="n">userInfo</span><span class="p">]);</span>
+
+            <span class="n">abort</span><span class="p">();</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">__persistentStoreCoordinator</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+<h2>
+<a name="credits" class="anchor" href="#credits"><span class="octicon octicon-link"></span></a>Credits</h2>
+
+<p>PFIncrementalStore was created by <a href="https://github.com/sbonami/">Scott
+BonAmi</a> (<a href="https://twitter.com/snb828">@snb828</a>).</p>
+
+<h2>
+<a name="disclaimer" class="anchor" href="#disclaimer"><span class="octicon octicon-link"></span></a>Disclaimer</h2>
+
+<p>PFIncrementalStore is not affiliated, associated, authorized,
+endorsed by, or in any way officially connected with Parse.com,
+Parse Inc., or any of its subsidiaries or its affiliates. The
+official Parse web site is available at <a href="https://www.parse.com">www.parse.com</a>. </p>
         </section>
 
         <aside id="sidebar">
