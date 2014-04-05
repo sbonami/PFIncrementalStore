@@ -71,11 +71,7 @@ dependency, Parse:</p>
 <span class="n">pod</span> <span class="s1">'PFIncrementalStore'</span>
 </pre></div>
 
-<p>Note the specification of iOS 5.0 as the platform; leaving out the 5.0 will cause CocoaPods to fail with the following message:</p>
-
-<blockquote>
-<p>[!] PFIncrementalStore is not compatible with iOS 4.3.</p>
-</blockquote>
+<p>Note the specification of iOS 5.0 as the platform; leaving out the 5.0 will cause CocoaPods to fail with the following message: <code>PFIncrementalStore is not compatible with iOS 4.3.</code></p>
 
 <h3>
 <a name="create-a-pfincrementalstore-subclass" class="anchor" href="#create-a-pfincrementalstore-subclass"><span class="octicon octicon-link"></span></a>Create a PFIncrementalStore Subclass</h3>
@@ -146,6 +142,11 @@ dependency, Parse:</p>
 <div class="highlight highlight-objective-c"><pre><span class="p">[</span><span class="n">Parse</span> <span class="n">setApplicationId</span><span class="o">:&lt;</span><span class="err">#</span> <span class="n">Parse</span> <span class="n">Application</span> <span class="n">ID</span> <span class="err">#</span><span class="o">&gt;</span>
               <span class="nl">clientKey:</span><span class="o">&lt;</span><span class="err">#</span> <span class="n">Parse</span> <span class="n">Client</span> <span class="n">Key</span> <span class="err">#</span><span class="o">&gt;</span><span class="p">];</span>
 </pre></div>
+
+<h3>
+<a name="use-core-data-like-you-normally-would" class="anchor" href="#use-core-data-like-you-normally-would"><span class="octicon octicon-link"></span></a>Use Core Data like you normally would</h3>
+
+<p>PFIncrementalStore is designed to work in the background with no additional hassle! You're free to make fetch &amp; save requests through Core Data and PFIncrementalStore will take care of syncing with Parse.</p>
 
 <h2>
 <a name="credits" class="anchor" href="#credits"><span class="octicon octicon-link"></span></a>Credits</h2>
