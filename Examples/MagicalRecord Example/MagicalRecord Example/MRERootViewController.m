@@ -34,9 +34,7 @@
 {
     [super viewDidLoad];
     
-    NSError *error = nil;
     self.fetchedResultsController = [Artist MR_fetchAllSortedBy:@"artistName" ascending:YES withPredicate:nil groupBy:nil delegate:self];
-    [self.fetchedResultsController performFetch:&error];
     
     // Display an Edit button in the navigation bar for this view controller.
     self.navigationItem.rightBarButtonItem = self.editButtonItem;
