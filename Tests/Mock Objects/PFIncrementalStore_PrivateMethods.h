@@ -13,10 +13,6 @@
 static NSString * const kPFIncrementalStoreErrorDomain = @"PFIncrementalStoreErrorDomain";
 static NSString * const kPFIncrementalStoreUnimplementedMethodException = @"PFIncrementalStoreUnimplementedMethodException";
 
-static NSString * const kPFReferenceObjectPrefix = @"__pf_";
-static NSString * const kPFIncrementalStoreLastModifiedAttributeName = @"__pf_lastModified";
-static NSString * const kPFIncrementalStoreResourceIdentifierAttributeName = @"__pf_resourceIdentifier";
-
 inline NSString * PFReferenceObjectFromResourceIdentifier(NSString *resourceIdentifier);
 inline NSString * PFResourceIdentifierFromReferenceObject(id referenceObject);
 
@@ -25,6 +21,23 @@ inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException(NSMana
 @interface PFIncrementalStore ()
 
 - (NSManagedObjectContext *)backingManagedObjectContext;
+
+// Save Request Methods
+
+-(void)insertObject:(NSManagedObject *)insertedObject
+        fromRequest:(NSSaveChangesRequest *)request
+          inContext:(NSManagedObjectContext *)context
+              error:(NSError *__autoreleasing *)error;
+
+-(void)updateObject:(NSManagedObject *)insertedObject
+        fromRequest:(NSSaveChangesRequest *)request
+          inContext:(NSManagedObjectContext *)context
+              error:(NSError *__autoreleasing *)error;
+
+-(void)deleteObject:(NSManagedObject *)insertedObject
+        fromRequest:(NSSaveChangesRequest *)request
+          inContext:(NSManagedObjectContext *)context
+              error:(NSError *__autoreleasing *)error;
 
 // Backing Methods
 
@@ -70,6 +83,14 @@ withAttributeAndRelationshipValuesFromManagedObject:(NSManagedObject *)managedOb
 @property (readwrite, nonatomic, copy, setter = pf_setResourceIdentifier:) NSString *pf_resourceIdentifier;
 
 - (void)setValuesFromParseObject:(PFObject *)parseObject;
+
+- (void)setPFFile:(PFFile *)file forKey:(NSString *)key;
+
+@end
+
+@interface NSMutableDictionary (_PFIncrementalStore)
+
+- (void)setPFFile:(PFFile *)file forKey:(NSString *)key;
 
 @end
 

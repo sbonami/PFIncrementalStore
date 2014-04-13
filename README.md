@@ -2,7 +2,8 @@ PFIncrementalStore
 ==================
 
 [![Build Status](https://travis-ci.org/sbonami/PFIncrementalStore.png?branch=master)](https://travis-ci.org/sbonami/PFIncrementalStore)
-[![Stories in Ready](https://badge.waffle.io/sbonami/PFIncrementalStore.png?label=ready)](https://waffle.io/sbonami/PFIncrementalStore)  
+[![Stories in Ready](https://badge.waffle.io/sbonami/PFIncrementalStore.png?label=ready)](https://waffle.io/sbonami/PFIncrementalStore)
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/sbonami/pfincrementalstore/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
 
 An NSIncrementalStore subclass for Parse
 
@@ -18,24 +19,6 @@ needed.
 `PFIncrementalStore` does not persist data directly. Instead, _it
 manages a persistent store coordinator_ that can be configured to
 communicate with any number of persistent stores of your choice.
-
-``` objective-c
-NSURL *storeURL = [[self applicationDocumentsDirectory]
-URLByAppendingPathComponent:@"BasicExample.sqlite"];
-NSDictionary *options = @{ NSInferMappingModelAutomaticallyOption :
-@(YES) };
-
-NSError *error = nil;
-if (![incrementalStore.backingPersistentStoreCoordinator
-addPersistentStoreWithType:NSSQLiteStoreType configuration:nil
-URL:storeURL options:options error:&error]) {
-    NSLog(@"Unresolved error %@, %@", error, [error userInfo]);
-    abort();
-}
-```
-
-If your data set is of a more fixed or ephemeral nature, you may want to
-use `NSInMemoryStoreType`.
 
 ## Requirements
 
@@ -54,21 +37,7 @@ higher.
 [CocoaPods](http://cocoapods.org) is the recommended way to add
 PFIncrementalStore to your project.
 
-Here's an example podfile that installs PFIncrementalStore and its
-dependency, Parse:
-
-### Podfile
-
-```ruby
-platform :ios, '5.0'
-
-pod 'PFIncrementalStore'
-```
-
-Note the specification of iOS 5.0 as the platform; leaving out the 5.0
-will cause CocoaPods to fail with the following message:
-
-> [!] PFIncrementalStore is not compatible with iOS 4.3.
+Check out the PFIncrementalStore [github page](http://sbonami.github.io/PFIncrementalStore/) for installation instructions.
 
 ## References
 
@@ -86,8 +55,7 @@ BonAmi](https://github.com/sbonami/).
 
 ### Creators
 
-[Scott BonAmi](http://github.com/sbonami)  
-[@snb828](https://twitter.com/snb828)
+[Scott BonAmi](http://github.com/sbonami)  ([@snb828](https://twitter.com/snb828))
 
 ## Disclaimer
 
@@ -100,3 +68,14 @@ official Parse web site is available at [www.parse.com](https://www.parse.com).
 
 PFIncrementalStore is available under the MIT license.
 See the LICENSE file for more info.
+
+## Contributing
+
+1. Fork repository on GitHub.
+1. Create a feature branch (should indicate intention `add_feature_x` or issue `##_issue_name`).
+1. Make changes.
+1. Test changes.
+1. Ensure all tests pass.
+1. Submit pull request using GitHub.
+
+Do not modify `PFIncrementalStore.podspec`, the maintainers will handle those changes.

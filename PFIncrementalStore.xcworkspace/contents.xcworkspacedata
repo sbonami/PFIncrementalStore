@@ -13,6 +13,9 @@
       <FileRef
          location = "group:PFIncrementalStore/PFIncrementalStore.m">
       </FileRef>
+      <FileRef
+         location = "group:PFIncrementalStore/NSManagedObject_PFIncrementalStore.h">
+      </FileRef>
    </Group>
    <Group
       location = "container:"
