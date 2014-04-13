@@ -249,8 +249,6 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
               withContext:(NSManagedObjectContext *)context
                     error:(NSError *__autoreleasing *)error {
     
-    NSLog(@"%@",fetchRequest.entity.parseQueryClassName);
-    
     PFQuery *query = [PFQuery queryWithClassName:fetchRequest.entity.parseQueryClassName predicate:fetchRequest.predicate];
     [query findObjectsInBackgroundWithBlock:^(NSArray *objects, NSError *error) {
         if (error) {
