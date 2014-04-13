@@ -255,12 +255,12 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
             NSLog(@"Error: %@, %@", query, error);
             [self notifyManagedObjectContext:context requestIsCompleted:YES forFetchRequest:fetchRequest fetchedObjectIDs:nil];
         } else {
-            [context performBlockAndWait:^{
+            [context performBlock:^{
                 NSManagedObjectContext *childContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
                 childContext.parentContext = context;
                 childContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy;
                 
-                [childContext performBlockAndWait:^{
+                [childContext performBlock:^{
                     [self insertOrUpdateObjects:objects ofEntity:fetchRequest.entity withContext:childContext error:nil completionBlock:^(NSArray *managedObjects, NSArray *backingObjects) {
                         NSSet *childObjects = [childContext registeredObjects];
                         PFSaveManagedObjectContextOrThrowInternalConsistencyException(childContext);
