@@ -256,9 +256,7 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
             [self notifyManagedObjectContext:context requestIsCompleted:YES forFetchRequest:fetchRequest fetchedObjectIDs:nil];
         } else {
             [context performBlock:^{
-                NSManagedObjectContext *childContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
-                childContext.parentContext = context;
-                childContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy;
+                NSManagedObjectContext *childContext = [self privateChildContextForParentContext:context];
                 
                 [childContext performBlock:^{
                     [self insertOrUpdateObjects:objects ofEntity:fetchRequest.entity withContext:childContext error:nil completionBlock:^(NSArray *managedObjects, NSArray *backingObjects) {
@@ -644,8 +642,7 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
     NSIncrementalStoreNode *node = [[NSIncrementalStoreNode alloc] initWithObjectID:objectID withValues:attributeValues version:1];
     
     if (attributeValues) {
-        NSManagedObjectContext *childContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
-        childContext.parentContext = context;
+        NSManagedObjectContext *childContext = [self privateChildContextForParentContext:context];
         childContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy;
         
         PFQuery *query = [[PFQuery alloc] initWithClassName:fetchRequest.entity.parseQueryClassName];
@@ -697,10 +694,8 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
 -(id)newValueForRelationship:(NSRelationshipDescription *)relationship forObjectWithID:(NSManagedObjectID *)objectID withContext:(NSManagedObjectContext *)context error:(NSError *__autoreleasing *)error {
     
     if (![[context existingObjectWithID:objectID error:nil] hasChanges]) {
-        NSManagedObjectContext *childContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
-        childContext.parentContext = context;
-        childContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy;
-        
+        NSManagedObjectContext *childContext = [self privateChildContextForParentContext:context];
+
         PFQuery *query = [[PFQuery alloc] initWithClassName:objectID.entity.parseQueryClassName];
         [query getObjectInBackgroundWithId:PFResourceIdentifierFromReferenceObject([self referenceObjectForObjectID:objectID]) block:^(PFObject *object, NSError *error) {
             if (error) {
@@ -1123,6 +1118,15 @@ withAttributeAndRelationshipValuesFromManagedObject:(NSManagedObject *)managedOb
     [userInfo setObject:relationship forKey:PFIncrementalStoreFaultingRelationshipKey];
     
     [[NSNotificationCenter defaultCenter] postNotificationName:notificationName object:context userInfo:userInfo];
+}
+
+#pragma mark - Helper Methods
+
+-(NSManagedObjectContext *)privateChildContextForParentContext:(NSManagedObjectContext *)parentContext {
+    NSManagedObjectContext *childContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
+    childContext.parentContext = parentContext;
+    childContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy;
+    return childContext;
 }
 
 @end
