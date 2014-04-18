@@ -76,6 +76,9 @@ withAttributeAndRelationshipValuesFromManagedObject:(NSManagedObject *)managedOb
                        forNewValuesForRelationship:(NSRelationshipDescription *)relationship
                                           forObjectWithID:(NSManagedObjectID *)objectID;
 
+// Helper Methods
+- (NSManagedObjectContext *)privateChildContextForParentContext:(NSManagedObjectContext *)parentContext;
+
 @end
 
 @interface NSManagedObject (_PFIncrementalStore)
