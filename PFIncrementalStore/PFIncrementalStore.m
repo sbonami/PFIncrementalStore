@@ -855,14 +855,16 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
     NSMutableArray *mutableBackingObjects = [NSMutableArray arrayWithCapacity:numberOfRepresentations];
     
     for (PFObject *object in parseObjects) {
+        NSArray *insertedObjectIDs = [context.insertedObjects valueForKey:@"pf_resourceIdentifier"];
+        NSArray *updatedObjectIDs = [context.updatedObjects valueForKey:@"pf_resourceIdentifier"];
+        if ([insertedObjectIDs containsObject:object.objectId] || [updatedObjectIDs containsObject:object.objectId]) {
+            continue;
+        }
+        
         __block NSManagedObject *managedObject = nil;
         [context performBlockAndWait:^{
             managedObject = [context existingObjectWithID:[self managedObjectIDForEntity:entity withParseObjectId:object.objectId] error:nil];
         }];
-        
-        if ([context.insertedObjects containsObject:managedObject] || [context.updatedObjects containsObject:managedObject]) {
-            continue;
-        }
         
         [object fetchIfNeeded];
         

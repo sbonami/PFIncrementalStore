@@ -1,0 +1,34 @@
+{ "results": [
+{
+  "songArtist": {
+    "__type": "Pointer",
+    "className": "Artist",
+    "objectId": "OqlyKuEigo"
+  },
+  "songGenre": {
+    "__type": "Pointer",
+    "className": "Genre",
+    "objectId": "YVDljh9eQf"
+  },
+  "songTitle": "Jump",
+  "createdAt": "2013-12-31T19:07:37.874Z",
+  "updatedAt": "2013-12-31T19:24:15.145Z",
+  "objectId": "ngyy6SWqK7"
+},
+{
+  "songArtist": {
+    "__type": "Pointer",
+    "className": "Artist",
+    "objectId": "cNhFGzTmI8"
+  },
+  "songGenre": {
+    "__type": "Pointer",
+    "className": "Genre",
+    "objectId": "vTnHHI2Xb4"
+  },
+  "songTitle": "Wrecking Ball",
+  "createdAt": "2013-12-31T19:07:37.767Z",
+  "updatedAt": "2013-12-31T19:23:43.245Z",
+  "objectId": "kwVuuXzBiS"
+}
+] }

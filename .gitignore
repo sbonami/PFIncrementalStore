@@ -19,6 +19,5 @@ DerivedData
 
 #CocoaPods
 Pods
-Tests/Podfile.lock
-Tests/PFIncrementalStore Tests.xcodeproj/xcshareddata/xcschemes/
 *.lock
+Tests/PFIncrementalStore Tests.xcodeproj/xcshareddata/xcschemes/

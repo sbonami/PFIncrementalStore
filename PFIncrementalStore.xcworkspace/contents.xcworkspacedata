@@ -17,10 +17,38 @@
          location = "group:PFIncrementalStore/NSManagedObject_PFIncrementalStore.h">
       </FileRef>
    </Group>
-   <FileRef
-      location = "group:Tests/Tests.xcodeproj">
-   </FileRef>
-   <FileRef
-      location = "group:Tests/Pods/Pods.xcodeproj">
-   </FileRef>
+   <Group
+      location = "container:"
+      name = "Examples">
+      <Group
+         location = "container:"
+         name = "Basic Example">
+         <FileRef
+            location = "group:Examples/Basic Example/Basic Example.xcodeproj">
+         </FileRef>
+         <FileRef
+            location = "group:Examples/Basic Example/Pods/Pods.xcodeproj">
+         </FileRef>
+      </Group>
+      <Group
+         location = "container:"
+         name = "MagicalRecord Example">
+         <FileRef
+            location = "group:Examples/MagicalRecord Example/MagicalRecord Example.xcodeproj">
+         </FileRef>
+         <FileRef
+            location = "group:Examples/MagicalRecord Example/Pods/Pods.xcodeproj">
+         </FileRef>
+      </Group>
+   </Group>
+   <Group
+      location = "container:"
+      name = "Tests">
+      <FileRef
+         location = "group:Tests/Tests.xcodeproj">
+      </FileRef>
+      <FileRef
+         location = "group:Tests/Pods/Pods.xcodeproj">
+      </FileRef>
+   </Group>
 </Workspace>
