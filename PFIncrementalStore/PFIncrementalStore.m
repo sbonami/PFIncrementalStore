@@ -273,6 +273,8 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
                                 NSManagedObject *parentObject = [context objectWithID:childObject.objectID];
                                 [context refreshObject:parentObject mergeChanges:YES];
                             }
+                            
+                            PFSaveManagedObjectContextOrThrowInternalConsistencyException(context);
                         }];
                         
                         [self notifyManagedObjectContext:context requestIsCompleted:YES forFetchRequest:fetchRequest fetchedObjectIDs:[managedObjects valueForKeyPath:@"objectID"]];

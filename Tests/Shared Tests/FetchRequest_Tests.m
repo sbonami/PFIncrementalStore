@@ -198,6 +198,29 @@ describe(@"executeFetchRequest:withContext:error:", ^{
                     blockToRun(@[testEntity], @[testEntity]);
                 });
                 
+                it(@"should save context", ^{
+                    [testIncrementalStore stub:@selector(insertOrUpdateObjects:ofEntity:withContext:error:completionBlock:) andReturn:nil];
+                    
+                    NSManagedObjectContext *testChildMoc = [NSManagedObjectContext nullMock];
+                    [testChildMoc stub:@selector(save:) andReturn:theValue(YES)];
+                    [testIncrementalStore stub:@selector(privateChildContextForParentContext:) andReturn:testChildMoc withArguments:testManagedObjectContext];
+                    
+                    KWCaptureSpy *testMocSpy = [testManagedObjectContext captureArgument:@selector(performBlock:) atIndex:0];
+                    KWCaptureSpy *testChildMocSpy = [testChildMoc captureArgument:@selector(performBlock:) atIndex:0];
+                    KWCaptureSpy *callbackSpy = [testIncrementalStore captureArgument:@selector(insertOrUpdateObjects:ofEntity:withContext:error:completionBlock:) atIndex:4];
+                    
+                    testParseReturnBlock(@[testParseObject], nil);
+                    NSManagedContextPerformBlockHandler testMocBlockHandler = testMocSpy.argument;
+                    testMocBlockHandler();
+                    NSManagedContextPerformBlockHandler testChildMocBlockHandler = testChildMocSpy.argument;
+                    testChildMocBlockHandler();
+                    
+                    [[testManagedObjectContext should] receive:@selector(save:) andReturn:theValue(YES) withCountAtLeast:1];
+                    
+                    PFInsertUpdateResponseBlock blockToRun = callbackSpy.argument;
+                    blockToRun(@[testEntity], @[testEntity]);
+                });
+                
                 it(@"should notify user that sync is completed with objects returned", ^{
                     [testIncrementalStore stub:@selector(insertOrUpdateObjects:ofEntity:withContext:error:completionBlock:) andReturn:nil];
                     
