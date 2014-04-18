@@ -48,14 +48,10 @@ You may find this useful in debugging the behavior of
 `PFIncrementalStore`, and its interactions with your app's Core Data
 stack.
 
-## Credits
+## Contributors
 
-PFIncrementalStore was created by [Scott
-BonAmi](https://github.com/sbonami/).
-
-### Creators
-
-[Scott BonAmi](http://github.com/sbonami)  ([@snb828](https://twitter.com/snb828))
+- [Scott BonAmi](http://github.com/sbonami)  ([@snb828](https://twitter.com/snb828))
+- [Aaron Abt](http://github.com/Laeger)
 
 ## Disclaimer
 
