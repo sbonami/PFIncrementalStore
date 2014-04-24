@@ -7,8 +7,14 @@ def import_pods
   pod 'PFIncrementalStore', :path => "../"
 end
 
-target :ios, exclusive: true do
+target :ios, :exclusive => true do
   platform :ios, '7.0'
   link_with 'iOS Test'
+  import_pods
+end
+
+target :osx, :exclusive => true do
+  platform :osx, '10.8'
+  link_with 'OS X Test'
   import_pods
 end

@@ -7,6 +7,7 @@ Pod::Spec.new do |s|
   s.author       = { 'Scott BonAmi' => 'sbonami@me.com' }
 
   s.ios.deployment_target = '5.0'
+  s.osx.deployment_target = '10.8'
 
   s.source       = { :git => "https://github.com/sbonami/PFIncrementalStore.git", :tag => "0.2.0" }
   s.source_files = 'PFIncrementalStore', 'PFIncrementalStore/**/*.{h,m}'
@@ -17,4 +18,5 @@ Pod::Spec.new do |s|
   s.requires_arc = true
 
   s.ios.dependency 'Parse-iOS-SDK'
+  s.osx.dependency 'Parse-OSX-SDK'
 end
