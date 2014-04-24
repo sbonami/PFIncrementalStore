@@ -9,7 +9,11 @@
 #import <Kiwi/Kiwi.h>
 #import "PFIncrementalStore_PrivateMethods.h"
 
-#import <Parse/Parse.h>
+#ifdef TARGET_OS_IPHONE
+#import <Parse-iOS-SDK/Parse.h>
+#else
+#import <Parse-OSX-SDK/ParseOSX.h>
+#endif
 
 #import "TestIncrementalStore.h"
 #import "TestManagedObjectModel.h"

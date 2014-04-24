@@ -6,7 +6,11 @@
 //
 //
 
-#import <Parse/Parse.h>
+#ifdef TARGET_OS_IPHONE
+#import <Parse-iOS-SDK/Parse.h>
+#else
+#import <Parse-OSX-SDK/ParseOSX.h>
+#endif
 
 #import "PFIncrementalStore.h"
 
