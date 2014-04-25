@@ -19,4 +19,6 @@ Pod::Spec.new do |s|
 
   s.ios.dependency 'Parse-iOS-SDK'
   s.osx.dependency 'Parse-OSX-SDK'
+
+  s.prepare_command = '/usr/bin/ruby add_build_phase.rb'
 end
