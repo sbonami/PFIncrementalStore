@@ -12,5 +12,3 @@ env:
     - TEST_TARGET=osx
 matrix:
     fast_finish: true
-    allow_failures:
-        - env: "TEST_TARGET=osx"
