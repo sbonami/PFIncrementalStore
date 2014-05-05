@@ -946,14 +946,15 @@ withAttributeAndRelationshipValuesFromManagedObject:(NSManagedObject *)managedOb
         }
         
         if ([relationship isToMany]) {
+            NSSet *relatedObjects = (NSSet *)relationshipValue;
             id mutableBackingRelationshipValue = nil;
             if ([relationship isOrdered]) {
-                mutableBackingRelationshipValue = [NSMutableOrderedSet orderedSetWithCapacity:[relationshipValue count]];
+                mutableBackingRelationshipValue = [NSMutableOrderedSet orderedSetWithCapacity:[relatedObjects count]];
             } else {
-                mutableBackingRelationshipValue = [NSMutableSet setWithCapacity:[relationshipValue count]];
+                mutableBackingRelationshipValue = [NSMutableSet setWithCapacity:[relatedObjects count]];
             }
             
-            for (NSManagedObject *relationshipManagedObject in relationshipValue) {
+            for (NSManagedObject *relationshipManagedObject in relatedObjects) {
                 if (![[relationshipManagedObject objectID] isTemporaryID]) {
                     NSManagedObjectID *backingRelationshipObjectID = [self managedObjectIDForBackingObjectForEntity:relationship.destinationEntity withParseObjectId:PFResourceIdentifierFromReferenceObject([self referenceObjectForObjectID:relationshipManagedObject.objectID])];
                     if (backingRelationshipObjectID) {
@@ -967,7 +968,8 @@ withAttributeAndRelationshipValuesFromManagedObject:(NSManagedObject *)managedOb
             
             [mutableRelationshipValues setValue:mutableBackingRelationshipValue forKey:relationship.name];
         } else {
-            if (![[relationshipValue objectID] isTemporaryID]) {
+            NSManagedObject *relatedObject = (NSManagedObject *)relationshipValue;
+            if (![[relatedObject objectID] isTemporaryID]) {
                 NSManagedObjectID *backingRelationshipObjectID = [self managedObjectIDForBackingObjectForEntity:relationship.destinationEntity withParseObjectId:PFResourceIdentifierFromReferenceObject([self referenceObjectForObjectID:[relationshipValue objectID]])];
                 if (backingRelationshipObjectID) {
                     NSManagedObject *backingRelationshipObject = [backingObject.managedObjectContext existingObjectWithID:backingRelationshipObjectID error:nil];
