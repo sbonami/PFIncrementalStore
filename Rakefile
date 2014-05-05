@@ -1,6 +1,9 @@
 namespace :test do
   task :prepare do
+    system(%Q{gem install cocoapods --no-rdoc --no-ri --no-document --quiet})
+    system(%Q{brew update && brew uninstall xctool && brew install xctool --HEAD})
     system(%Q{mkdir -p "Tests/PFIncrementalStore Tests.xcodeproj/xcshareddata/xcschemes" && cp Tests/Schemes/*.xcscheme "Tests/PFIncrementalStore Tests.xcodeproj/xcshareddata/xcschemes/"})
+    system(%Q{cd Tests && pod install && cd ../})
   end
 
   desc "Run the PFIncrementalStore Tests for iOS"
