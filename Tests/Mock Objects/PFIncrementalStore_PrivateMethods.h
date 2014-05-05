@@ -85,7 +85,7 @@ withAttributeAndRelationshipValuesFromManagedObject:(NSManagedObject *)managedOb
 
 @end
 
-@interface NSManagedObject (_PFIncrementalStore)
+@interface NSManagedObject ()
 
 @property (readwrite, nonatomic, copy, setter = pf_setResourceIdentifier:) NSString *pf_resourceIdentifier;
 
