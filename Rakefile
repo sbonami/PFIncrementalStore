@@ -1,6 +1,7 @@
 namespace :test do
   task :prepare do
     system(%Q{gem install cocoapods --no-rdoc --no-ri --no-document --quiet})
+    system(%Q{gem install specific_install && gem specific_install -l https://github.com/CocoaPods/Xcodeproj.git -b master})
     system(%Q{brew update && brew uninstall xctool && brew install xctool --HEAD})
     system(%Q{mkdir -p "Tests/PFIncrementalStore Tests.xcodeproj/xcshareddata/xcschemes" && cp Tests/Schemes/*.xcscheme "Tests/PFIncrementalStore Tests.xcodeproj/xcshareddata/xcschemes/"})
     system(%Q{cd Tests && pod install && cd ../})
