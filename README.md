@@ -70,7 +70,7 @@ See the LICENSE file for more info.
 1. Fork repository on GitHub.
 1. Create a feature branch (should indicate intention `add_feature_x` or issue `##_issue_name`).
 1. Make changes.
-1. Test changes.
+1. Test changes (`rake test:ios` or `rake test:osx`).
 1. Ensure all tests pass.
 1. Submit pull request using GitHub.
 
