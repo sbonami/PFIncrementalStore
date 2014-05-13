@@ -9,12 +9,15 @@
 #import "AppDelegate.h"
 #import "BERootViewController.h"
 #import "BESongViewController.h"
+#import "PFIncrementalStore.h"
 
 #import "Artist.h"
 #import "Song.h"
 #import "Genre.h"
 
-@interface BERootViewController () <NSFetchedResultsControllerDelegate>
+@interface BERootViewController () <NSFetchedResultsControllerDelegate>{
+    NSManagedObjectContext *context;
+}
 @property (nonatomic, strong) NSFetchedResultsController *fetchedResultsController;
 @end
 
@@ -34,27 +37,55 @@
     [super viewDidLoad];
     
     AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
+    context = [appDelegate managedObjectContext];
     
     NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] initWithEntityName:@"Artist"];
     NSSortDescriptor *sortByName = [NSSortDescriptor sortDescriptorWithKey:@"artistName" ascending:YES];
     fetchRequest.sortDescriptors = @[sortByName];
     self.fetchedResultsController = [[NSFetchedResultsController alloc] initWithFetchRequest:fetchRequest
-                                                                        managedObjectContext:[appDelegate managedObjectContext]
+                                                                        managedObjectContext:context
                                                                           sectionNameKeyPath:nil
                                                                                    cacheName:nil];
     
     NSError *error = nil;
     self.fetchedResultsController.delegate = self;
     [self.fetchedResultsController performFetch:&error];
-
+    
     // Display an Edit button in the navigation bar for this view controller.
     self.navigationItem.rightBarButtonItem = self.editButtonItem;
+    self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(addObject:)];
+    
+    //refresh controller
+    self.refreshControl = [[UIRefreshControl alloc] init];
+    [self.refreshControl addTarget:self action:@selector(refetchData) forControlEvents:UIControlEventValueChanged];
+    [[NSNotificationCenter defaultCenter] addObserverForName:PFIncrementalStoreContextDidFetchRemoteValues
+                                                      object:nil queue:[NSOperationQueue mainQueue]
+                                                  usingBlock:^(NSNotification *note) {
+                                                      [self.refreshControl endRefreshing];
+                                                  }];
+    
 }
 
-- (void)didReceiveMemoryWarning
-{
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
+#pragma mark - UI Event
+- (IBAction)addObject:(id)sender{
+    Artist *artist = [NSEntityDescription insertNewObjectForEntityForName:@"Artist" inManagedObjectContext:context];
+    Song *song = [NSEntityDescription insertNewObjectForEntityForName:@"Song" inManagedObjectContext:context];
+    Genre *genre = [NSEntityDescription insertNewObjectForEntityForName:@"Genre" inManagedObjectContext:context];
+    artist.artistName = [NSString stringWithFormat:@"user_%d", arc4random_uniform(100)];
+    genre.genreName = [NSString stringWithFormat:@"genre_%d", arc4random_uniform(100)];
+    song.songTitle = [NSString stringWithFormat:@"song_%d", arc4random_uniform(100)];
+    song.songArtist = artist;
+    song.songGenre = genre;
+    NSError *err;
+    [context save:&err];
+    if (err) {
+        NSLog(@"%@", err.description);
+    }
+}
+
+- (void)refetchData{
+    _fetchedResultsController.fetchRequest.resultType = NSManagedObjectResultType;
+    [_fetchedResultsController performFetch:nil];
 }
 
 #pragma mark - NSFetchedResultsControllerDelegate
@@ -77,6 +108,7 @@
 - (void)controller:(NSFetchedResultsController *)controller didChangeObject:(id)object atIndexPath:(NSIndexPath *)indexPath forChangeType:(NSFetchedResultsChangeType)type newIndexPath:(NSIndexPath *)newIndexPath {
     switch(type) {
         case NSFetchedResultsChangeInsert:
+            if (!newIndexPath) return;
             [self.tableView insertRowsAtIndexPaths:[NSArray arrayWithObject:newIndexPath] withRowAnimation:UITableViewRowAnimationAutomatic];
             break;
         case NSFetchedResultsChangeDelete:
@@ -86,6 +118,7 @@
             [self.tableView reloadRowsAtIndexPaths:[NSArray arrayWithObject:indexPath] withRowAnimation:UITableViewRowAnimationAutomatic];
             break;
         case NSFetchedResultsChangeMove:
+            if (!newIndexPath) return;
             [self.tableView deleteRowsAtIndexPaths:[NSArray arrayWithObject:indexPath] withRowAnimation:UITableViewRowAnimationAutomatic];
             [self.tableView insertRowsAtIndexPaths:[NSArray arrayWithObject:newIndexPath] withRowAnimation:UITableViewRowAnimationAutomatic];
             break;
@@ -126,7 +159,8 @@
     
     // Configure the cell...
     [cell.textLabel setText:rowArtist.artistName];
-    [cell.detailTextLabel setText:[NSString stringWithFormat:@"Number of Songs: %lu",(unsigned long)[rowArtist.artistSongs count]]];
+    NSSet *songs = rowArtist.artistSongs;
+    [cell.detailTextLabel setText:[NSString stringWithFormat:@"Number of Songs: %lu",(unsigned long)songs.count]];
     
     return cell;
 }
@@ -145,8 +179,12 @@
         // Delete the row from the data source
         id <NSFetchedResultsSectionInfo> tableSection = [[self.fetchedResultsController sections] objectAtIndex:indexPath.section];
         Artist *rowArtist = [[tableSection objects] objectAtIndex:indexPath.row];
-        [self.fetchedResultsController.managedObjectContext deleteObject:rowArtist];
-        [self.fetchedResultsController.managedObjectContext save:nil];
+        for (Song *s in rowArtist.artistSongs) {
+            [context deleteObject:s.songGenre];
+            [context deleteObject:s];
+        }
+        [context deleteObject:rowArtist];
+        [context save:nil];
     }
 }
 

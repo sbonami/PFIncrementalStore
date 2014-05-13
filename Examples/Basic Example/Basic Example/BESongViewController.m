@@ -34,13 +34,25 @@
     [super viewDidLoad];
     
     // Display an Edit button in the navigation bar for this view controller.
-    self.navigationItem.rightBarButtonItem = self.editButtonItem;
+    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(newSong:)];
+
 }
 
-- (void)didReceiveMemoryWarning
-{
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
+- (IBAction)newSong:(id)sender{
+    AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
+    NSManagedObjectContext *context = [appDelegate managedObjectContext];
+    Song *song = [NSEntityDescription insertNewObjectForEntityForName:@"Song" inManagedObjectContext:context];
+    Genre *genre = [NSEntityDescription insertNewObjectForEntityForName:@"Genre" inManagedObjectContext:context];
+    genre.genreName = [NSString stringWithFormat:@"genre_%d", arc4random_uniform(100)];
+    song.songTitle = [NSString stringWithFormat:@"song_%d", arc4random_uniform(100)];
+    song.songArtist = _artist;
+    song.songGenre = genre;
+    NSError *err;
+    [context save:&err];
+    if (err) {
+        NSLog(@"%@", err.description);
+    }
+    [self.tableView reloadData];
 }
 
 -(void)setArtist:(Artist *)artist {
