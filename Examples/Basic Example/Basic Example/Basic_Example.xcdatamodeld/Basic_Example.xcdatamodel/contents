@@ -11,7 +11,7 @@
     <entity name="Song" representedClassName="Song" syncable="YES">
         <attribute name="songTitle" optional="YES" attributeType="String" syncable="YES"/>
         <relationship name="songArtist" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Artist" inverseName="artistSongs" inverseEntity="Artist" syncable="YES"/>
-        <relationship name="songGenre" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Genre" inverseName="genreSongs" inverseEntity="Genre" syncable="YES"/>
+        <relationship name="songGenre" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="Genre" inverseName="genreSongs" inverseEntity="Genre" syncable="YES"/>
     </entity>
     <elements>
         <element name="Artist" positionX="0" positionY="0" width="128" height="75"/>

@@ -50,7 +50,6 @@
     NSError *error = nil;
     self.fetchedResultsController.delegate = self;
     [self.fetchedResultsController performFetch:&error];
-    
     // Display an Edit button in the navigation bar for this view controller.
     self.navigationItem.rightBarButtonItem = self.editButtonItem;
     self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(addObject:)];
@@ -179,10 +178,7 @@
         // Delete the row from the data source
         id <NSFetchedResultsSectionInfo> tableSection = [[self.fetchedResultsController sections] objectAtIndex:indexPath.section];
         Artist *rowArtist = [[tableSection objects] objectAtIndex:indexPath.row];
-        for (Song *s in rowArtist.artistSongs) {
-            [context deleteObject:s.songGenre];
-            [context deleteObject:s];
-        }
+        
         [context deleteObject:rowArtist];
         [context save:nil];
     }
