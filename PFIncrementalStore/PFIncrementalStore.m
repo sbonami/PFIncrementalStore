@@ -202,10 +202,9 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
         return parsePredicate;
         
     } else {
-        NSLog(@"Predicate type not supported");
-        abort();
+        NSLog(@"Predicate not supported by Parse: %@", self);
+        return nil;
     }
-    return nil;
 }
 
 @end
