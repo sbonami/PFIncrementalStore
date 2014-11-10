@@ -16,5 +16,5 @@ Pod::Spec.new do |s|
 
   s.requires_arc = true
 
-  s.ios.dependency 'Parse-iOS-SDK'
+  s.ios.dependency 'Parse'
 end
