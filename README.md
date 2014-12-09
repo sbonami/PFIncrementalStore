@@ -1,3 +1,6 @@
+:warning: **PFIS is no longer maintained, see [Parse Local Storage](http://blog.parse.com/2014/12/09/parse-local-datastore-for-ios/)** :warning:
+---------------------
+
 PFIncrementalStore
 ==================
 
