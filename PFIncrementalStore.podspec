@@ -1,4 +1,7 @@
 Pod::Spec.new do |s|
+  s.deprecated   = true
+  
+  
   s.name         = "PFIncrementalStore"
   s.version      = "0.2.0"
   s.summary      = "Core Data Persistence with Parse, an NSIncrementalStore subclass."
