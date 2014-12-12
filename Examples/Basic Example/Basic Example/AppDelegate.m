@@ -23,8 +23,8 @@
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     
     // Override point for customization after application launch.
-    [Parse setApplicationId:<# Parse Application ID #>
-                  clientKey:<# Parse Client Key #>];
+    [Parse setApplicationId:@"<#ID#>"
+                  clientKey:@"<#key#>"];
     
     BERootViewController *rootViewController = [[BERootViewController alloc] init];
     UINavigationController *navRootViewController = [[UINavigationController alloc] initWithRootViewController:rootViewController];
