@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#import <Parse-iOS-SDK/Parse.h>
+#import <Parse/Parse.h>
 #import "PFIncrementalStore.h"
 #import <objc/runtime.h>
 
