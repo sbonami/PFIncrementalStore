@@ -208,7 +208,8 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
 
 - (id)relatedObjectsForRelationship:(NSRelationshipDescription *)relationship {
     id relatedObjects = nil;
-    if (relationship.isToMany) {
+    
+    if (relationship.isToMany && !relationship.inverseRelationship.isToMany) {
         PFQuery *query = [PFQuery queryWithClassName:relationship.destinationEntity.parseQueryClassName];
         [query whereKey:relationship.inverseRelationship.name equalTo:self];
         relatedObjects = [query findObjects];

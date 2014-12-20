@@ -16,6 +16,22 @@
       <FileRef
          location = "group:PFIncrementalStore/NSManagedObject_PFIncrementalStore.h">
       </FileRef>
+      <Group
+         location = "container:"
+         name = "Reserved Parse Objects">
+         <FileRef
+            location = "group:PFIncrementalStore/PFReservedObject.h">
+         </FileRef>
+         <FileRef
+            location = "group:PFIncrementalStore/PFReservedObject.m">
+         </FileRef>
+         <FileRef
+            location = "group:PFIncrementalStore/PFProxyUser.h">
+         </FileRef>
+         <FileRef
+            location = "group:PFIncrementalStore/PFProxyUser.m">
+         </FileRef>
+      </Group>
    </Group>
    <Group
       location = "container:"
