@@ -145,6 +145,70 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
 
 @end
 
+@implementation NSExpression (_PFIncrementalStore)
+- (NSExpression*) expressionSubstitutingCoreDataWithParseObjects {
+    
+    if (self.expressionType == NSConstantValueExpressionType) {
+        id obj = [self constantValue];
+        if ([obj isKindOfClass: [NSManagedObject class]]) {
+
+            NSManagedObject* object = (NSManagedObject*) obj;
+            NSString *objId= [object pf_resourceIdentifier];
+            NSString *pfId = PFResourceIdentifierFromReferenceObject(objId);
+            PFQuery *query = [PFQuery queryWithClassName:NSStringFromClass([object class])];
+            PFObject *parseObject = [query getObjectWithId: pfId];
+            
+            NSExpression *newExpression = [NSExpression expressionForConstantValue: parseObject];
+            return newExpression;
+        }
+    }
+    return self;
+}
+
+@end
+
+@implementation NSPredicate (_PFIncrementalStore)
+
+- (NSPredicate*) predicateSubstitutingCoreDataWithParseObjects {
+    
+    NSPredicate *p0 = self;
+    
+    if ([p0 isKindOfClass:[NSCompoundPredicate class]]) {
+        
+        NSCompoundPredicate *p0a = (NSCompoundPredicate *)p0;
+        NSCompoundPredicateType type0 = p0a.compoundPredicateType;  // NSAndPredicateType
+        
+        NSMutableArray *mArray = [[NSMutableArray alloc] initWithCapacity: p0a.subpredicates.count];
+        for (NSPredicate *predicate in p0a.subpredicates) {
+            NSPredicate *p1 = [predicate predicateSubstitutingCoreDataWithParseObjects];
+            [mArray addObject: p1];
+        }
+        
+        return [[NSCompoundPredicate alloc] initWithType: type0 subpredicates: mArray.copy];
+        
+    } else if ([p0 isKindOfClass:[NSComparisonPredicate class]]) {
+        NSComparisonPredicate *p1a = (NSComparisonPredicate *)p0;
+        NSPredicateOperatorType type1 = p1a.predicateOperatorType;
+        
+        NSExpression *leftExpression = [p1a.leftExpression expressionSubstitutingCoreDataWithParseObjects];
+        NSExpression *rightExpression = [p1a.rightExpression expressionSubstitutingCoreDataWithParseObjects];
+        
+        NSComparisonPredicate *parsePredicate = [[NSComparisonPredicate alloc] initWithLeftExpression:leftExpression
+                                                                                      rightExpression:rightExpression
+                                                                                             modifier:p1a.comparisonPredicateModifier
+                                                                                                 type:p1a.predicateOperatorType
+                                                                                              options:p1a.options];
+        
+        return parsePredicate;
+        
+    } else {
+        NSLog(@"Predicate not supported by Parse: %@", self);
+        return nil;
+    }
+}
+
+@end
+
 @implementation NSMutableDictionary (_PFIncrementalStore)
 
 - (void)setPFFile:(PFFile *)file forKey:(NSString *)key {
@@ -249,7 +313,8 @@ static inline void PFSaveManagedObjectContextOrThrowInternalConsistencyException
               withContext:(NSManagedObjectContext *)context
                     error:(NSError *__autoreleasing *)error {
     
-    PFQuery *query = [PFQuery queryWithClassName:fetchRequest.entity.parseQueryClassName predicate:fetchRequest.predicate];
+    NSPredicate *parsePredicate = [fetchRequest.predicate predicateSubstitutingCoreDataWithParseObjects];
+    PFQuery *query = [PFQuery queryWithClassName:fetchRequest.entity.parseQueryClassName predicate: parsePredicate];
     [query findObjectsInBackgroundWithBlock:^(NSArray *objects, NSError *error) {
         if (error) {
             NSLog(@"Error: %@, %@", query, error);
