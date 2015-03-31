@@ -20,7 +20,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#ifdef TARGET_OS_IPHONE
 #import <Parse-iOS-SDK/Parse.h>
+#else
+#import <Parse-OSX-SDK/ParseOSX.h>
+#endif
+
 #import "PFIncrementalStore.h"
 #import <objc/runtime.h>
 

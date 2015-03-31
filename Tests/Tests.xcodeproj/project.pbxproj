@@ -17,19 +17,37 @@
 		963F1EA518582B89009C50DF /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 963F1E8E18582B77009C50DF /* XCTest.framework */; };
 		963F1EAB18582B89009C50DF /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 963F1EA918582B89009C50DF /* InfoPlist.strings */; };
 		963F1EAD18582B89009C50DF /* OS_X_Test.m in Sources */ = {isa = PBXBuildFile; fileRef = 963F1EAC18582B89009C50DF /* OS_X_Test.m */; };
+		9654FE9119183EC70078256C /* NSManagedObject_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 96B80C0218C62AD50072E190 /* NSManagedObject_Tests.m */; };
+		96572716190DA5460060FC30 /* RequiredMethod_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 966F86CB18600B0500178A45 /* RequiredMethod_Tests.m */; };
+		96572717190DA5460060FC30 /* FetchRequest_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 966F86CD18600D0900178A45 /* FetchRequest_Tests.m */; };
 		966F86CE18600D0900178A45 /* FetchRequest_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 966F86CD18600D0900178A45 /* FetchRequest_Tests.m */; };
-		966F86D118600D3B00178A45 /* FetchRequest_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 966F86CD18600D0900178A45 /* FetchRequest_Tests.m */; };
 		96B80C0018C626C00072E190 /* NSMutableDictionary_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 96B80BFF18C626C00072E190 /* NSMutableDictionary_Tests.m */; };
 		96B80C0318C62AD50072E190 /* NSManagedObject_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 96B80C0218C62AD50072E190 /* NSManagedObject_Tests.m */; };
 		96C812BB1867D58D004B064E /* ResourceIdentifier_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 962407861866CAAB00520783 /* ResourceIdentifier_Tests.m */; };
-		96C812BC1867D58E004B064E /* ResourceIdentifier_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 962407861866CAAB00520783 /* ResourceIdentifier_Tests.m */; };
 		96C812BD1867D598004B064E /* RequiredMethod_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 966F86CB18600B0500178A45 /* RequiredMethod_Tests.m */; };
-		96C812BE1867D598004B064E /* RequiredMethod_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 966F86CB18600B0500178A45 /* RequiredMethod_Tests.m */; };
 		96C812BF1867D855004B064E /* SaveRequest_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 962407871866CAAB00520783 /* SaveRequest_Tests.m */; };
 		96C812C01867D856004B064E /* SaveRequest_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 962407871866CAAB00520783 /* SaveRequest_Tests.m */; };
+		96D296111909B9FE00CA333B /* TestManagedObjectModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 9622F1071861416900020D4C /* TestManagedObjectModel.m */; };
+		96D296121909BA0100CA333B /* TestIncrementalStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 9622F1041861402E00020D4C /* TestIncrementalStore.m */; };
+		96D296171909BB1200CA333B /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 963F1E9018582B77009C50DF /* Foundation.framework */; };
 		A5FC87A080E44629BA8786E0 /* libPods-osx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C0140CE70AB4E6EA97A5A2F /* libPods-osx.a */; };
+		AA848A51F46C4F448B824D27 /* ParseOSX.framework in Copy Parse SDK Files to Product Folder */ = {isa = PBXBuildFile; fileRef = E0B2BDDF2AE94504862A6057 /* ParseOSX.framework */; };
 		B8EFD6E709E1404693BD3FA9 /* libPods-ios.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E84EF8B0347F4737BFABC2EC /* libPods-ios.a */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		D7AC152DEC33438AB6AA02BD /* Copy Parse SDK Files to Product Folder */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 16;
+			files = (
+				AA848A51F46C4F448B824D27 /* ParseOSX.framework in Copy Parse SDK Files to Product Folder */,
+			);
+			name = "Copy Parse SDK Files to Product Folder";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		026E70EDD8914070B191D1FB /* Pods-ios.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ios.xcconfig"; path = "Pods/Pods-ios.xcconfig"; sourceTree = "<group>"; };
@@ -59,6 +77,7 @@
 		966F86CD18600D0900178A45 /* FetchRequest_Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FetchRequest_Tests.m; path = "Shared Tests/FetchRequest_Tests.m"; sourceTree = "<group>"; };
 		96B80BFF18C626C00072E190 /* NSMutableDictionary_Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = NSMutableDictionary_Tests.m; path = "Shared Tests/Categories/NSMutableDictionary_Tests.m"; sourceTree = "<group>"; };
 		96B80C0218C62AD50072E190 /* NSManagedObject_Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = NSManagedObject_Tests.m; path = "Shared Tests/Categories/NSManagedObject_Tests.m"; sourceTree = "<group>"; };
+		E0B2BDDF2AE94504862A6057 /* ParseOSX.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ParseOSX.framework; path = "Pods/Parse-OSX-SDK/ParseOSX.framework"; sourceTree = "<group>"; };
 		E84EF8B0347F4737BFABC2EC /* libPods-ios.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-ios.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -80,6 +99,7 @@
 			files = (
 				963F1EA518582B89009C50DF /* XCTest.framework in Frameworks */,
 				A5FC87A080E44629BA8786E0 /* libPods-osx.a in Frameworks */,
+				96D296171909BB1200CA333B /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -109,6 +129,7 @@
 				963F1E8C18582B77009C50DF /* Products */,
 				026E70EDD8914070B191D1FB /* Pods-ios.xcconfig */,
 				685C3E9F6DFE47EB87EA0CA2 /* Pods-osx.xcconfig */,
+				E0B2BDDF2AE94504862A6057 /* ParseOSX.framework */,
 			);
 			sourceTree = "<group>";
 		};
@@ -223,6 +244,7 @@
 				963F1EA118582B89009C50DF /* Frameworks */,
 				963F1EA218582B89009C50DF /* Resources */,
 				9EAC2509D59E4438BADD8C06 /* Copy Pods Resources */,
+				D7AC152DEC33438AB6AA02BD /* Copy Parse SDK Files to Product Folder */,
 			);
 			buildRules = (
 			);
@@ -363,10 +385,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				963F1EAD18582B89009C50DF /* OS_X_Test.m in Sources */,
-				96C812BC1867D58E004B064E /* ResourceIdentifier_Tests.m in Sources */,
-				966F86D118600D3B00178A45 /* FetchRequest_Tests.m in Sources */,
-				96C812BE1867D598004B064E /* RequiredMethod_Tests.m in Sources */,
+				96572716190DA5460060FC30 /* RequiredMethod_Tests.m in Sources */,
+				9654FE9119183EC70078256C /* NSManagedObject_Tests.m in Sources */,
+				96572717190DA5460060FC30 /* FetchRequest_Tests.m in Sources */,
+				96D296111909B9FE00CA333B /* TestManagedObjectModel.m in Sources */,
 				96C812C01867D856004B064E /* SaveRequest_Tests.m in Sources */,
+				96D296121909BA0100CA333B /* TestIncrementalStore.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
